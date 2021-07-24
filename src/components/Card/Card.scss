@@ -1,0 +1,281 @@
+@import '../../styles/Mixins.scss';
+
+/** Shared class */
+.titleClass {
+  cursor: default;
+  width: 100%;
+  display: block;
+  white-space: pre-wrap;
+  color: var(--dark);
+  font-size: 12px;
+  line-height: 15px;
+  margin: 0;
+  text-align: center;
+  text-transform: lowercase;
+  @include truncate();
+
+  &::first-letter {
+    text-transform: uppercase;
+  }
+
+  em {
+    width: 100%;
+    display: block;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-style: normal;
+    @include truncate();
+  }
+}
+
+.buttonClass {
+  cursor: pointer;
+  border: none;
+  outline: none !important;
+  border-radius: 5px;
+  padding: 2.5px 10px;
+  font-size: 10px;
+  line-height: 10px;
+  text-align: center;
+}
+
+.viewMoreClass {
+  background-color: var(--primary);
+  color: var(--dark);
+  opacity: 0.9;
+  width: 80px;
+  height: 20px;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  svg {
+    margin-right: 5px;
+  }
+}
+
+.graphClass {
+  gap: 2px;
+  grid-template-columns: 1fr;
+  grid-template-rows: 60px 1fr;
+  width: calc(100% - 10px);
+  height: 216px;
+
+  div.header {
+    display: grid;
+    gap: 25px;
+    grid-template-columns: 92px 1fr;
+    align-items: center;
+
+    h1 {
+      @extend .titleClass;
+      width: 100%;
+      color: var(--secondary);
+      text-align: right;
+
+      em {
+        color: var(--dark);
+      }
+    }
+
+    div.description {
+      position: relative;
+      display: grid;
+      align-items: center;
+      justify-content: start;
+      gap: 3px;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 25px;
+      min-height: 50px;
+
+      &::after {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -12.5px;
+        width: 2px;
+        height: 100%;
+        background-color: var(--primary);
+      }
+
+      > span {
+        display: block;
+        white-space: pre-wrap;
+        color: var(--dark);
+        font-size: 13px;
+        line-height: 15px;
+        margin: 0;
+        text-align: left;
+        text-transform: capitalize;
+
+        em {
+          display: block;
+          font-weight: bold;
+          text-transform: uppercase;
+          font-style: normal;
+        }
+      }
+
+      button {
+        @extend .buttonClass;
+        @extend .viewMoreClass;
+      }
+    }
+  }
+
+  div.content {
+    position: relative;
+
+    div.preloader {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      @include preloader();
+    }
+
+    div.empty-data {
+      position: relative;
+      background-color: var(--org-header-bg);
+      width: calc(100% - 20px);
+      max-width: 200px;
+      margin: 10px auto;
+      padding: 10px;
+      border: 1px dashed var(--org-header-color);
+      border-radius: 3px;
+      transform: translateY(50%);
+      box-sizing: border-box;
+      @include no-select();
+
+      span {
+        display: block;
+        font-size: 13px;
+        color: var(--org-header-color);
+        text-align: center;
+      }
+    }
+  }
+}
+
+/** Component class (main) */
+.Card {
+  display: grid;
+  float: left;
+  height: 180px;
+  padding: 8px;
+  background-color: var(--org-header-bg);
+  margin: 0 5px 10px 5px;
+  border-radius: 5px;
+  box-sizing: border-box;
+
+  // Amount Type
+  &.amount {
+    gap: 10px;
+    grid-template-columns: 1fr;
+    grid-template-rows: 35px 1fr 25px;
+
+    &.half-width {
+      width: calc(50% - 10px);
+    }
+
+    &.full-width {
+      width: calc(100% - 10px);
+    }
+
+    div.header {
+      display: grid;
+      align-items: center;
+      justify-items: center;
+
+      h1 {
+        @extend .titleClass;
+      }
+    }
+
+    div.content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+
+      ul {
+        display: grid;
+        gap: 2.5px;
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(2, 40px);
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        box-sizing: border-box;
+
+        li {
+          color: var(--dark);
+          align-self: center;
+          display: block;
+          width: 100%;
+          height: 30px;
+          @include truncate();
+
+          &.highlighted {
+            color: var(--secondary);
+          }
+
+          span {
+            cursor: default;
+            width: 100%;
+            display: block;
+            text-align: center;
+            @include truncate();
+
+            &:first-child {
+              font-size: 15px;
+              line-height: 15px;
+              font-weight: bold;
+            }
+
+            &:last-child {
+              font-size: 10px;
+              line-height: 10px;
+            }
+          }
+        }
+      }
+    }
+
+    div.actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      button {
+        @extend .buttonClass;
+        @extend .viewMoreClass;
+      }
+    }
+  }
+
+  // Spline Type
+  &.spline,
+  &.multiserie {
+    @extend .graphClass;
+  }
+
+  // Pie and Bar Type
+  &.pie,
+  &.bar {
+    @extend .graphClass;
+
+    // Overwrite
+    div.header {
+      div.description {
+        grid-template-rows: 1fr;
+      }
+    }
+  }
+}

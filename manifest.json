@@ -1,0 +1,26 @@
+{
+  "name": "fi-graph",
+  "label": "FI Graph",
+  "type": "widget",
+  "version": "1.0.0",
+  "exbVersion": "1.0.0",
+  "author": "Jeison Nisperuza <jnisperuza1102@gmail.com>",
+  "description": "Wrapper for render cards with the filtered financial instruments.",
+  "copyright": "Sevinformacion S.A",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "properties": {},
+  "extensions": [
+    {
+      "name": "FI Graph Store",
+      "point": "REDUX_STORE",
+      "uri": "extensions/fi-graph-store"
+    }
+  ],
+  "translatedLocales": [
+    "en"
+  ],
+  "defaultSize": {
+    "width": 800,
+    "height": 500
+  }
+}

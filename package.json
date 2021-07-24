@@ -1,0 +1,30 @@
+{
+  "name": "fi-graph",
+  "version": "1.0.0",
+  "description": "Wrapper for render cards with the filtered financial instruments.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jnisperuza/financial-instruments.git"
+  },
+  "author": "Jeison Nisperuza <jnisperuza1102@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jnisperuza/financial-instruments/issues"
+  },
+  "homepage": "https://github.com/jnisperuza/financial-instruments#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.35",
+    "@fortawesome/free-solid-svg-icons": "^5.15.3",
+    "@fortawesome/react-fontawesome": "^0.1.14",
+    "@js-joda/core": "^3.2.0",
+    "react": "^17.0.2",
+    "react-google-charts": "^3.0.15"
+  }
+}

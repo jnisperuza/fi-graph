@@ -1,0 +1,139 @@
+@import '../../styles/Mixins.scss';
+
+$maxHeight: 300px;
+
+.filter-status {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 25px;
+  max-height: 72px;
+  padding: 0 17px 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  // bevel
+  background: linear-gradient(
+    180deg,
+    var(--secondary),
+    var(--secondary) 10px,
+    var(--white) 10px,
+    var(--white) 100%,
+    var(--white) 100%,
+    var(--white)
+  );
+
+  &.show-all {
+    max-height: $maxHeight;
+    box-shadow: 0 4px 2px -2px rgba(0, 0, 0, 0.12);
+
+    div.badge-list {
+      padding-bottom: 10px;
+      overflow: auto;
+    }
+  }
+
+  div.badge-list {
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-self: flex-start;
+    width: 100%;
+    max-height: $maxHeight;
+    overflow: hidden;
+    z-index: 10;
+
+    div.badge {
+      cursor: default;
+      display: grid;
+      gap: 2.5px;
+      align-items: center;
+      grid-template-columns: 1fr 15px;
+      max-width: 117px;
+      min-width: 40px;
+      background-color: var(--primary);
+      padding: 2.5px 5px 2.5px 7.5px;
+      border-radius: 5px;
+      margin: 0 5px 5px 0;
+      box-sizing: border-box;
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      span {
+        cursor: default;
+        display: block;
+        width: 100%;
+        color: var(--white);
+        font-size: 12px;
+        @include truncate();
+        @include no-select();
+      }
+
+      button {
+        background-color: var(--transparent);
+        cursor: pointer;
+        border: none;
+        outline: none;
+        opacity: 0.5;
+        // FontAwesomeIcon
+        color: var(--white);
+        justify-self: center;
+
+        &:hover {
+          opacity: 1;
+        }
+
+        &:focus,
+        &:active {
+          outline: none !important; /** overwrite style jimu-keyboard */
+          border: none;
+        }
+      }
+    }
+  }
+
+  div.last-update {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    height: 25px;
+    padding: 5px;
+    background-color: var(--primary);
+    border-radius: 10px;
+
+    span {
+      color: var(--white);
+      font-size: 12px;
+      text-align: center;
+      @include no-select();
+    }
+  }
+
+  button.toggle-list {
+    cursor: pointer;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 10px;
+    margin: auto;
+    outline: none !important;
+    border: none;
+    background-color: var(--white);
+    font-size: 10px;
+    color: var(--dark-900);
+    text-align: center;
+    line-height: 10px;
+    z-index: 20;
+
+    &:hover {
+      background-color: var(--org-header-bg);
+    }
+  }
+}
