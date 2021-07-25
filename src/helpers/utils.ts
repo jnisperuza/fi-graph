@@ -27,11 +27,6 @@ export const groupBy = (xs: any[], key: string | number) => {
     }, {});
 }
 
-export const capitalize = (s: string) => {
-    if (typeof s !== 'string') return ''
-    return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
 export const hexColor = () => {
     const genLetters = () => {
         const letters = ['a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];

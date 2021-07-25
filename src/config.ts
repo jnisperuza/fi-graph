@@ -1,27 +1,20 @@
 import { ImmutableObject } from 'seamless-immutable';
 // @ts-ignore
 import { React, FeatureLayerQueryParams } from 'jimu-core';
-import { LocalDate } from '@js-joda/core';
+import { CardType } from './components/Card/config';
 
 export interface State {
   query: FeatureLayerQueryParams;
   wrapperFilterStatusRef: React.RefObject<HTMLDivElement>;
   refresh: boolean;
+  loading: boolean;
   filters: Filter[];
   filterStatus: string[];
+  queries: Query[];
+  queryData: QueryData[];
 }
 
 export type IMWidgetState = ImmutableObject<State>;
-
-export enum Instrument {
-  Credit = 'CREDITO',
-  Fag = 'FAG',
-  Lec = 'LEC',
-  Isa = 'ISA',
-  Icr = 'ICR',
-  Mfr = 'MFR',
-  Cif = 'CIF',
-}
 
 export enum InstrumentSubtype {
   CifContratos = 'CIF CONTRATOS',
@@ -38,7 +31,6 @@ export enum InstrumentSubtype {
 
 export enum FilterType {
   Instrument = 'INSTRUMENTO',
-  InstrumentSubtype = 'SUBTIPO',
   Period = 'PERIODO',
   Territory = 'TERRITORIO',
   Chain = 'CADENA',
@@ -50,7 +42,33 @@ export interface Filter {
   label?: string;
   field?: string;
   type?: string;
-  value: string | string[] | Instrument[];
+  value: string | string[] | InstrumentSubtype[];
+}
+
+// This is used to paint all cards dynamically 
+export interface FilterList {
+  filterType: FilterType;
+  filterList: Filter[];
+}
+
+export interface Query {
+  name: string;
+  visual: CardType;
+  query: any;
+}
+
+export interface QueryData {
+  name: string;
+  visual: CardType;
+  data: any;
+}
+
+export interface DatasourceRecord {
+  getData: Function;
+}
+
+export interface DatasourceResponse {
+  records: DatasourceRecord[];
 }
 
 export interface WidgetState {
@@ -69,7 +87,6 @@ export interface HistoricalEvolutionData {
 }
 
 export interface Data {
-  instruments?: CardData[];
   instrumentSubtypes?: CardData[];
   historicalEvolution?: HistoricalEvolutionData[];
   territorialDistribution?: CardData[];
@@ -79,35 +96,28 @@ export interface Data {
 }
 
 export const PAGE_SIZE = 10000;
-
-export const SHORT_MONTH_NAMES = {
-  1: 'Ene',
-  2: 'Feb',
-  3: 'Mar',
-  4: 'Abr',
-  5: 'May',
-  6: 'Jun',
-  7: 'Jul',
-  8: 'Ago',
-  9: 'Sep',
-  10: 'Oct',
-  11: 'Nov',
-  12: 'Dic'
-}
+export const INTL = {
+  code: 'es-CO',
+  currency: 'COP'
+};
 
 export const DEFAULT_FILTER = [
-  {
-    filterType: FilterType.Instrument,
-    value: [
-      'CREDITO',
-      'FAG',
-      'LEC',
-      'ISA',
-      'ICR',
-      'MFR',
-      'CIF'
-    ],
-  },
+  // {
+  //   filterType: FilterType.Instrument,
+  //   label: 'SUBTIPO',
+  //   value: [
+  //     'CIF CONTRATOS',
+  //     'CRED COLOCACIONES',
+  //     'CRED SALDOS',
+  //     'FAG EXPEDIDAS',
+  //     'FAG PAGADAS',
+  //     'FAG VIGENTES',
+  //     'ICR PROYECTOS',
+  //     'ISA POLIZAS',
+  //     'LEC COLOCACIONES',
+  //     'MFR OPERACIONES'
+  //   ],
+  // },
   {
     filterType: FilterType.Instrument,
     label: 'SUBTIPO',
@@ -116,7 +126,13 @@ export const DEFAULT_FILTER = [
       'CRED COLOCACIONES',
       'CRED SALDOS',
       'FAG EXPEDIDAS',
-      'FAG PAGADAS',
+      'FAG PAGADAS'
+    ],
+  },
+  {
+    filterType: FilterType.Instrument,
+    label: 'SUBTIPO',
+    value: [
       'FAG VIGENTES',
       'ICR PROYECTOS',
       'ISA POLIZAS',
@@ -127,50 +143,16 @@ export const DEFAULT_FILTER = [
   {
     filterType: FilterType.Period,
     label: 'AÑO',
-    value: String(LocalDate.now().minusYears(1).year()),
+    value: '2020',
   },
-  // {
-  //   filterType: FilterType.Period,
-  //   label: 'SEMESTRE',
-  //   value: [
-  //     'SEMESTRE 1'
-  //   ],
-  // },
-  // {
-  //   filterType: FilterType.Period,
-  //   label: 'TRIMESTRE',
-  //   value: [
-  //     'TRIMESTRE 1'
-  //   ],
-  // },
   {
     filterType: FilterType.Period,
-    label: 'MES',
-    value: [
-      '2'
-    ],
+    label: 'SEMESTRE',
+    value: ['SEMESTRE 1'],
   },
-  // {
-  //   filterType: FilterType.Territory,
-  //   label: 'DEPARTAMENTO',
-  //   value: [
-  //     'CUNDINAMARCA'
-  //   ],
-  // },
-  // {
-  //   filterType: FilterType.Territory,
-  //   label: 'MUNICIPIO',
-  //   value: [
-  //     'FUSAGASUGA'
-  //   ],
-  // }
 ];
 
-export const STANDARDIZATION_FILTER_FIELDS = {
-  /**
-   * INSTRUMENT
-   * The field for instrument is 'string' by default, but the filter has no label
-   */
+export const DB_FIELDS = {
   SUBTIPO: {
     field: 'subtipo_inst',
     type: 'string'
@@ -217,102 +199,117 @@ export const STANDARDIZATION_FILTER_FIELDS = {
   },
 };
 
-export const STANDARDIZATION_TEXT_INSTRUMENTS = {
-  CREDITO: {
-    normal: 'Colocaciones',
-    bold: 'Crédito',
-    key: Instrument.Credit
+export const QUERY_SCHEMA = [
+  {
+    name: 'instrumentos',
+    visual: CardType.Amount,
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['subtipo_inst'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
   },
-  FAG: {
-    normal: 'Certificados',
-    bold: 'FAG',
-    key: Instrument.Fag
+  {
+    // Periódo de Tiempo: Grafica de barras del número de Operaciones distibuidas
+    // por Fuente de Financiamiento para el año seleccionado o periodo vigente.
+    name: 'periodo de tiempo',
+    visual: CardType.Bar,
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['interm'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
   },
-  LEC: {
-    normal: 'Colocaciones',
-    bold: 'LEC',
-    key: Instrument.Lec,
+  {
+    // Grafica de Barras del Top 5 Departamentos por número de operaciones 
+    // (cuando aplique: si el usuario no selecciona un depto o un municipio.
+    name: 'territorio',
+    visual: CardType.Bar,
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['dpto_cnmbr'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
+    }
   },
-  ISA: {
-    normal: 'Pólizas',
-    bold: 'ISA',
-    key: Instrument.Isa,
+  {
+    // Gráfico de torta de total de operaciones por Tipo Productor.
+    name: 'caracteristicas productor',
+    visual: CardType.Pie,
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['tipo_productor'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
   },
-  ICR: {
-    normal: 'Cuentas',
-    bold: 'ICR',
-    key: Instrument.Icr,
-  },
-  MFR: {
-    normal: 'Créditos',
-    bold: 'MFR',
-    key: Instrument.Mfr,
-  },
-  CIF: {
-    normal: 'Contratos',
-    bold: 'CIF',
-    key: Instrument.Cif,
-  },
-}
-
-export const STANDARDIZATION_TEXT_INSTRUMENT_SUBTYPES = {
-  'CIF CONTRATOS': {
-    normal: 'Subtipo',
-    bold: 'CIF Contratos',
-    key: InstrumentSubtype.CifContratos
-  },
-  'CRED COLOCACIONES': {
-    normal: 'Subtipo',
-    bold: 'CRED Colocaciones',
-    key: InstrumentSubtype.CredColocaciones
-  },
-  'CRED SALDOS': {
-    normal: 'Subtipo',
-    bold: 'CRED Saldos',
-    key: InstrumentSubtype.CredSaldos
-  },
-  'FAG EXPEDIDAS': {
-    normal: 'Subtipo',
-    bold: 'FAG Expedidas',
-    key: InstrumentSubtype.FagExpedidas
-  },
-  'FAG PAGADAS': {
-    normal: 'Subtipo',
-    bold: 'FAG Pagadas',
-    key: InstrumentSubtype.FagPagadas
-  },
-  'FAG VIGENTES': {
-    normal: 'Subtipo',
-    bold: 'FAG Vigentes',
-    key: InstrumentSubtype.FagVigentes
-  },
-  'ICR PROYECTOS': {
-    normal: 'Subtipo',
-    bold: 'ICR Proyectos',
-    key: InstrumentSubtype.IcrProyectos
-  },
-  'ISA POLIZAS': {
-    normal: 'Subtipo',
-    bold: 'ISA Polizas',
-    key: InstrumentSubtype.IsaPolizas
-  },
-  'LEC COLOCACIONES': {
-    normal: 'Subtipo',
-    bold: 'LEC Colocaciones',
-    key: InstrumentSubtype.LecColocaciones
-  },
-  'MFR OPERACIONES': {
-    normal: 'Subtipo',
-    bold: 'MFR Operaciones',
-    key: InstrumentSubtype.MfrOperaciones
-  },
-}
-
-export const DEFAULT_INSTRUMENTS = [
-  ...Object.keys(Instrument).map(key =>
-    STANDARDIZATION_TEXT_INSTRUMENTS[Instrument[key]]
-  ),
-  ...Object.keys(InstrumentSubtype).map(key =>
-    STANDARDIZATION_TEXT_INSTRUMENT_SUBTYPES[InstrumentSubtype[key]]
-  )
-]
+  {
+    // Gáfico de barras de total de operaciones por Tipo Intermediario.
+    name: 'tipo intermediario',
+    visual: CardType.Bar,
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['tipo_interm'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  }
+];

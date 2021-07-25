@@ -17,98 +17,23 @@ import {
   WidgetState,
   Filter,
   FilterType,
-  DEFAULT_INSTRUMENTS,
-  STANDARDIZATION_TEXT_INSTRUMENTS,
   DEFAULT_FILTER,
-  STANDARDIZATION_FILTER_FIELDS,
   Data,
   PAGE_SIZE,
-  SHORT_MONTH_NAMES,
-  STANDARDIZATION_TEXT_INSTRUMENT_SUBTYPES
+  FilterList,
+  QUERY_SCHEMA,
+  DatasourceResponse,
+  Query,
+  QueryData
 } from '../config';
 
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
 import { CardType, TitleCard } from '../components/Card/config';
-import { getData } from '../helpers/process';
-import { groupBy } from '../helpers/utils';
 
 import "./widget.scss";
-import { LocalDate } from '@js-joda/core';
-import { filter } from 'lodash-es';
+import { getData, unifyFilters, where } from '../helpers/process';
 
-
-const flatInstrumentFilter = (data: Filter[]) => {
-  if (!data?.length) return [];
-  // Filter
-  const flatted = data.filter((filter: Filter) => filter.filterType === FilterType.Instrument)
-    .reduce((accumulator, currentValue) => accumulator.concat(currentValue.value), []);
-  // Normalize
-  const normalized = flatted.map(key => STANDARDIZATION_TEXT_INSTRUMENTS[key] || STANDARDIZATION_TEXT_INSTRUMENT_SUBTYPES[key]);
-  return normalized.length ? normalized : [];
-}
-
-const addFieldToFilter = (filters: Filter[]) => {
-  if (!filters?.length) return;
-  return filters.map(filter => {
-    const sfFields = STANDARDIZATION_FILTER_FIELDS[filter.label];
-    filter.field = sfFields?.field || 'instrumento';
-    filter.type = sfFields?.type || 'string';
-    return filter;
-  });
-}
-
-const isFullWidth = (data: string[], position: number): boolean => {
-  return data?.length === position + 1 &&
-    data?.length % 2 !== 0;
-}
-
-const getTerritoryLabels = (filter: Filter[]): string[] => {
-  const territoryFilter = filter.filter(filter => filter.filterType === FilterType.Territory);
-  const labels = ['Colombia'];
-  // Get the last two territory filters
-  if (territoryFilter.length) {
-    const lastTerritoryValues = territoryFilter[territoryFilter.length - 1].value;
-    if (lastTerritoryValues.length) {
-      const last = lastTerritoryValues[lastTerritoryValues.length - 1];
-      labels.push(last);
-    }
-  }
-  if (territoryFilter.length > 1) {
-    const penultimateTerritoryValues = territoryFilter[territoryFilter.length - 2].value;
-    if (penultimateTerritoryValues.length) {
-      const penultimate = penultimateTerritoryValues[penultimateTerritoryValues.length - 1];
-      labels.push(penultimate);
-      // Remove the first item, this array allow two items
-      labels.shift();
-    }
-  }
-  return labels;
-}
-
-const getPeriodLabels = (filter: Filter[]): string[] => {
-  // Get year from filter | default previous year
-  const year = filter.find((filter: Filter) => filter.label === 'AÑO')?.value || LocalDate.now().minusYears(1).year();
-  const periodFilter = filter.filter(filter => filter.filterType === FilterType.Period);
-  const labels = [];
-  if (periodFilter.length) {
-    const last = periodFilter[periodFilter.length - 1];
-    // Format month
-    if (last.field === 'mes') {
-      const month = SHORT_MONTH_NAMES[Number(last.value)];
-      labels.push(month);
-    } else {
-      labels.push(last.value.slice(0, 4));
-    }
-  }
-  labels.push(year);
-  return labels;
-}
-
-const hasFilterDepartment = (filter: Filter[]) => {
-  if (!filter?.length) return;
-  return filter.find((filter: Filter) => filter.label === 'DEPARTAMENTO');
-}
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -116,9 +41,12 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   state = {
     query: null,
     refresh: false,
+    loading: false,
     wrapperFilterStatusRef: React.createRef<HTMLDivElement>(),
     filters: [],
-    filterStatus: []
+    filterStatus: [],
+    queries: [],
+    queryData: []
   };
 
   constructor(props: any) {
@@ -126,25 +54,20 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
   }
 
-  // getOriginDataSource() {
-  //   return DataSourceManager.getInstance().getDataSource(this.props.useDataSources?.[0]?.dataSourceId)
-  // }
+  getOriginDataSource() {
+    return DataSourceManager.getInstance().getDataSource(this.props.useDataSources?.[0]?.dataSourceId)
+  }
 
   componentDidMount() {
-    this.query();
+    this.updateFilters();
   }
 
   componentWillReceiveProps() {
-    // Time to wait for redux to update
-    setTimeout(() => {
-      // Update query (where)
-      this.query();
-      this.setState({ refresh: true });
-    });
+    this.updateFilters();
   }
 
   handleRemoveFilter(filter: string) {
-    const { filters } = this.props?.widgetState;
+    const { filters } = this.state;
     const found = filters.find(item => {
       console.log(item.value, filter);
       return item.value.includes(filter);
@@ -164,46 +87,80 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     return { widgetState: state.widgetState };
   }
 
-  where = () => {
-    const filters = addFieldToFilter(this.props?.widgetState?.filters) ||
-      addFieldToFilter(DEFAULT_FILTER);
-
-    // Update state
-    this.setState({ filters });
-
-    let where = '';
-    filters.forEach((filter, index) => {
-      if (filter.value instanceof Array) {
-        filter.value.forEach((item, _index) => {
-          const value = filter.type === 'number' ? item : `'${item}'`;
-          where += `${filter.field} = ${value} ${_index + 1 !== filter.value.length ? 'or' : (index + 1 !== filters.length ? 'and' : '')} `;
-        });
-      } else {
-        const value = filter.type === 'number' ? filter.value : `'${filter.value}'`;
-        where += `${filter.field} = ${value} ${index + 1 !== filters.length ? 'and' : ''} `;
-      }
-    });
-
-    // Update where with years
-    const xplode = where.split('anio =');
-    if (xplode.length) {
-      where = 'anio <=' + xplode[1];
+  updateFilters() {
+    const dispatch = () => {
+      const filters = this.props.widgetState?.filters?.length && this.props.widgetState.filters || DEFAULT_FILTER;
+      // Update filters state
+      this.setState({ filters });
+      this.buildQueries();
     }
-    return where;
+    // Time to wait for redux to update
+    setTimeout(dispatch);
   }
 
-  query = () => {
-    if (!this.isDsConfigured()) {
-      return;
+  buildQueries() {
+    const { filters } = this.state;
+    const formattedFilters = unifyFilters(filters);
+    const whereList = formattedFilters.map(item => where(item.filterList));
+
+    const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
+      //Unify all where
+      querySchema.query.where = whereList.join(' and ').trim();
+      return querySchema;
+    });
+    // Update queries state
+    this.setState({ queries });
+  }
+
+  buildQueryData() {
+    const queryData: QueryData[] = [];
+    const { queries } = this.state;
+    // const queryList = [];
+    const ds = this.getOriginDataSource();
+    const iterate = (e: Query[], item = 0) => {
+      try {
+        if (e[item] !== undefined) {
+          ds.query(e[item].query).then((result: DatasourceResponse) => {
+            queryData.push({
+              name: e[item].name,
+              visual: e[item].visual,
+              data: getData(result)
+            });
+            // Update state
+            this.setState({ queryData, refresh: true });
+            // Next item
+            item++;
+            if (item < e.length) {
+              iterate(e, item);
+            } else {
+              this.setState({ loading: false, refresh: true });
+            }
+          });
+        }
+      } catch (error) { }
     }
 
-    this.setState({
-      query: {
-        where: this.where(),
-        outFields: ['*'],
-        pageSize: PAGE_SIZE
-      }
-    });
+    this.setState({ loading: true });
+    iterate(queries);
+
+    // queries.forEach(item => {
+    //   if (ds) {
+    //     queryList.push(ds.query(item.query));
+    //   }
+    // });
+
+    // Promise.all(queryList).then((results) => {
+    //   results.forEach((result, index) => {
+    //     queryData.push({
+    //       name: queries[index].name,
+    //       visual: queries[index].visual,
+    //       data: getData(result)
+    //     });
+    //   });
+    //   // Update queries state
+    //   this.setState({ queryData });
+    //   console.log(queryData);
+    // });
   }
 
   isDsConfigured = () => {
@@ -220,11 +177,6 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     }
   }
 
-  // getInstruments() {
-  //   const ds = this.getOriginDataSource()
-  //   return ds.query({ where: "instrumento='CREDITO'", outFields: ['instrumento', 'total_opif', 'valor_opif'] });
-  // }
-
   renderErrorMessage() {
     return (
       <div className="error-message">
@@ -233,99 +185,28 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     )
   }
 
-  renderCards(loading: boolean, data: Data) {
-    const { filters } = this.props.widgetState;
-    const instrumentFilters = flatInstrumentFilter(filters);
-    const instrumentCards = instrumentFilters.length ? instrumentFilters : DEFAULT_INSTRUMENTS;
-    const fs = filters?.length && filters.map((filter: Filter) => filter.label).filter((filter: string) => filter) || [];
-    // Get years for subtitle Spline chart
-    const groupByYear = groupBy(data.historicalEvolution, 'year');
-    const years = Object.keys(groupByYear);
+  renderCards() {
+    // Generate data for each filter type into state
+    const { queryData } = this.state;
 
-    // this.getInstruments().then((res) => {
-    //   console.log(res.records.map((r: any) => r.getData()));
-    // });
-
-    // Update badge list for FilterStatus component
-    this.setState({
-      filterStatus: [
-        ...fs,
-        ...instrumentFilters.map(item => item.bold)
-      ]
-    });
+    if (!queryData.length) {
+      this.buildQueryData();
+    }
 
     return (
       <>
-        {instrumentCards.map((title: TitleCard, index: number) => {
-          const instrumentData = data.instruments.find((item: any) => item.name === title.key);
-          const instrumentSubtypeData = data.instrumentSubtypes.find((item: any) => item.name === title.key);
-          return (
-            <Card
-              type={CardType.Amount} loading={loading}
-              data={instrumentData || instrumentSubtypeData}
-              options={{
-                fullWidth: isFullWidth(instrumentCards, index),
-                title
-              }} />
-          )
-        })}
-
-        <Card
-          type={CardType.Multiserie}
-          loading={loading}
-          data={data.historicalEvolution}
-          options={{
-            fullWidth: true,
-            title: { normal: 'Periodo de', bold: 'Tiempo' },
-            subtitle: { normal: 'Instrumentos financieros', bold: years.join(' - ') }
-          }} />
-
-        {!hasFilterDepartment(this.state.filters) && (
-          <Card
-            type={CardType.Bar}
-            loading={loading}
-            data={data.territorialDistribution}
-            options={{
-              fullWidth: true,
-              title: { normal: 'Top 5', bold: 'Departamentos' }
-            }} />
-        )}
-
-        <Card
-          type={CardType.Bar}
-          loading={loading}
-          data={data.distributionChain}
-          options={{
-            fullWidth: true,
-            title: { normal: 'Distribución', bold: 'De Cadena' }
-          }} />
-
-        <Card
-          type={CardType.Pie}
-          loading={loading}
-          data={data.producerType}
-          options={{
-            fullWidth: true,
-            title: { normal: 'Características', bold: 'Productor' }
-          }} />
-
-        <Card
-          type={CardType.Bar}
-          loading={loading}
-          data={data.intermediaryType}
-          options={{
-            fullWidth: true,
-            title: { normal: 'Tipo de', bold: 'Intermediario' }
-          }} />
+        {queryData.map(qd => (
+          <>
+            <span>{qd.name}</span> <br />
+          </>
+        ))}
       </>
     )
   }
 
   renderComponent = (ds: DataSource, info: IMDataSourceInfo) => {
-    const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
-    const data = getData(ds, this.state.filters);
-    const territoryLabels = getTerritoryLabels(this.state.filters);
-    const periodLabels = getPeriodLabels(this.state.filters);
+    // const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
+    const { loading } = this.state;
 
     this.setState({ refresh: false });
     return (
@@ -337,24 +218,17 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
         )}
         <header>
           <div className="right-wrapper">
-            {territoryLabels.map((label: string, index: number) => (
-              <h1 title={label} className={territoryLabels.length - 1 !== index ? 'small' : ''}>
-                {label}
-              </h1>
-            ))}
+            <h1>
+              Colombia
+            </h1>
           </div>
-          <h2 title={periodLabels.join(' - ')}>
-            {periodLabels.join(' - ')}
-          </h2>
+          <h2>Feb - 2020</h2>
           <div className="wrapper-filter-status" ref={this.state.wrapperFilterStatusRef}>
             <FilterStatus removeFilter={this.handleRemoveFilter} filters={this.state.filterStatus} />
           </div>
         </header>
         <main className={`${loading ? 'loading' : ''}`}>
-          {
-            !this.isDsConfigured() ?
-              this.renderErrorMessage() : this.renderCards(loading, data)
-          }
+          {this.renderCards()}
         </main>
       </div>
     )
@@ -368,7 +242,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     return (
       <DataSourceComponent
         useDataSource={this.props.useDataSources[0]}
-        query={this.state.query}
+        query={{}}
         widgetId={this.props.id}
         refresh={this.state.refresh}
       >
