@@ -2,7 +2,6 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import { CardType, Card, PIE_OPTIONS, BAR_OPTIONS } from './config';
-import { Chart } from "react-google-charts";
 
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
