@@ -6,13 +6,6 @@ import { ImmutableObject } from 'seamless-immutable';
  */
 export const DEFAULT_HEIGHT = 72;
 
-export enum CardType {
-    Amount = 'AMOUNT',
-    Spline = 'SPLINE',
-    Pie = 'PIE',
-    Bar = 'BAR'
-}
-
 export interface FilterStatus {
     filters?: string[];
     removeFilter?: (filter: string) => void;

@@ -8,24 +8,12 @@
   white-space: pre-wrap;
   color: var(--dark);
   font-size: 12px;
+  font-weight: 600;
   line-height: 15px;
   margin: 0;
   text-align: center;
-  text-transform: lowercase;
+  text-transform: uppercase;
   @include truncate();
-
-  &::first-letter {
-    text-transform: uppercase;
-  }
-
-  em {
-    width: 100%;
-    display: block;
-    font-weight: bold;
-    text-transform: uppercase;
-    font-style: normal;
-    @include truncate();
-  }
 }
 
 .buttonClass {
@@ -60,30 +48,27 @@
   grid-template-columns: 1fr;
   grid-template-rows: 60px 1fr;
   width: calc(100% - 10px);
-  height: 216px;
+  height: 250px;
 
   div.header {
     display: grid;
-    gap: 25px;
-    grid-template-columns: 92px 1fr;
+    gap: 20px;
+    grid-template-columns: 1fr 100px;
     align-items: center;
 
     h1 {
       @extend .titleClass;
       width: 100%;
-      color: var(--secondary);
-      text-align: right;
-
-      em {
-        color: var(--dark);
-      }
+      color: var(--dark);
+      text-align: left;
     }
 
     div.description {
       position: relative;
       display: grid;
       align-items: center;
-      justify-content: start;
+      justify-content: center;
+      justify-items: center;
       gap: 3px;
       grid-template-columns: 1fr;
       grid-template-rows: 1fr 25px;
@@ -110,13 +95,6 @@
         margin: 0;
         text-align: left;
         text-transform: capitalize;
-
-        em {
-          display: block;
-          font-weight: bold;
-          text-transform: uppercase;
-          font-style: normal;
-        }
       }
 
       button {
@@ -260,8 +238,7 @@
     }
   }
 
-  // Spline Type
-  &.spline,
+  // Multiserie Type
   &.multiserie {
     @extend .graphClass;
   }

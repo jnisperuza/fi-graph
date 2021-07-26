@@ -6,7 +6,6 @@ import {
   DataSourceManager,
   DataSourceComponent,
   DataSource,
-  FeatureLayerDataSource,
   IMDataSourceInfo,
   IMState
   // @ts-ignore
@@ -15,24 +14,20 @@ import {
 import {
   IMWidgetState,
   WidgetState,
-  Filter,
-  FilterType,
   DEFAULT_FILTER,
-  Data,
-  PAGE_SIZE,
-  FilterList,
   QUERY_SCHEMA,
   DatasourceResponse,
   Query,
-  QueryData
+  QueryData,
+  Hide
 } from '../config';
 
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
-import { CardType, TitleCard } from '../components/Card/config';
+import { CardType } from '../components/Card/config';
+import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels } from '../helpers/process';
 
 import "./widget.scss";
-import { getData, unifyFilters, where } from '../helpers/process';
 
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
@@ -41,7 +36,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   state = {
     query: null,
     refresh: false,
-    loading: false,
+    preloader: false,
     wrapperFilterStatusRef: React.createRef<HTMLDivElement>(),
     filters: [],
     filterStatus: [],
@@ -64,19 +59,23 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
 
   componentWillReceiveProps() {
     this.updateFilters();
+    // Update FilterStatus (badge)
+    this.buildFilterStatus();
   }
 
   handleRemoveFilter(filter: string) {
     const { filters } = this.state;
-    const found = filters.find(item => {
-      console.log(item.value, filter);
-      return item.value.includes(filter);
-    });
-    console.log(found);
-    this.props.dispatch({
-      type: 'CLEAR_FILTERS',
-      val: [filter]
-    });
+    const found = filters.find(item => item.value.includes(filter));
+
+    if (found) {
+      const filterToClean = { ...found };
+      filterToClean.value = [filter];
+
+      this.props.dispatch({
+        type: 'CLEAR_FILTERS',
+        val: filterToClean
+      });
+    }
   }
 
   /**
@@ -102,7 +101,6 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const { filters } = this.state;
     const formattedFilters = unifyFilters(filters);
     const whereList = formattedFilters.map(item => where(item.filterList));
-
     const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
       //Unify all where
       querySchema.query.where = whereList.join(' and ').trim();
@@ -110,12 +108,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     });
     // Update queries state
     this.setState({ queries });
+    // Clear previous data
+    this.setState({ queryData: [] });
   }
 
   buildQueryData() {
     const queryData: QueryData[] = [];
     const { queries } = this.state;
-    // const queryList = [];
     const ds = this.getOriginDataSource();
     const iterate = (e: Query[], item = 0) => {
       try {
@@ -123,7 +122,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
           ds.query(e[item].query).then((result: DatasourceResponse) => {
             queryData.push({
               name: e[item].name,
-              visual: e[item].visual,
+              cardConfig: e[item].cardConfig,
               data: getData(result)
             });
             // Update state
@@ -133,34 +132,29 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             if (item < e.length) {
               iterate(e, item);
             } else {
-              this.setState({ loading: false, refresh: true });
+              // Shutdown preloader and refresh template
+              this.setState({ preloader: false, refresh: true });
             }
           });
         }
       } catch (error) { }
     }
-
-    this.setState({ loading: true });
+    // Start preloader
+    this.setState({ preloader: true });
     iterate(queries);
+  }
 
-    // queries.forEach(item => {
-    //   if (ds) {
-    //     queryList.push(ds.query(item.query));
-    //   }
-    // });
+  buildFilterStatus() {
+    const dispatch = () => {
+      const { filters } = this.state;
+      const haveIncomingFilters = !!this.props.widgetState?.filters?.length; // [] or null
+      const filterStatus = haveIncomingFilters ? filters.map((filter) => filter.value)
+        .reduce((accumulator, currentValue) => accumulator.concat(currentValue), []) : [];
 
-    // Promise.all(queryList).then((results) => {
-    //   results.forEach((result, index) => {
-    //     queryData.push({
-    //       name: queries[index].name,
-    //       visual: queries[index].visual,
-    //       data: getData(result)
-    //     });
-    //   });
-    //   // Update queries state
-    //   this.setState({ queryData });
-    //   console.log(queryData);
-    // });
+      this.setState({ filterStatus });
+    }
+    // Time to wait for redux to update
+    setTimeout(dispatch);
   }
 
   isDsConfigured = () => {
@@ -185,50 +179,104 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     )
   }
 
-  renderCards() {
-    // Generate data for each filter type into state
-    const { queryData } = this.state;
+  valideCardType(qd: QueryData) {
+    const { filters } = this.state;
+    const { hide } = qd.cardConfig;
+    let ruleFoundHide = false;
 
-    if (!queryData.length) {
-      this.buildQueryData();
+    if (hide?.length) {
+      hide.forEach((rule: Hide) => {
+        const found = filters.find(filter => filter[rule.field] === rule.value);
+        if (found) ruleFoundHide = !!found;
+      });
     }
 
-    return (
-      <>
-        {queryData.map(qd => (
-          <>
-            <span>{qd.name}</span> <br />
-          </>
-        ))}
-      </>
+    if (ruleFoundHide) return;
+    if (qd.cardConfig.type === CardType.Amount) {
+      return this.drawCardAmount(qd);
+    }
+    else if (
+      qd.cardConfig.type === CardType.Bar ||
+      qd.cardConfig.type === CardType.Pie
+    ) {
+      return this.drawCardGraph(qd);
+    }
+  }
+
+  drawCardAmount(qd: QueryData) {
+    // In this graph an "Amount" card corresponds to a row of data
+    return qd.data.map(
+      (item: any, position: number) => (
+        <Card
+          type={qd.cardConfig.type}
+          data={{
+            amount: item.total_opif_sum,
+            value: item.valor_opif_sum
+          }}
+          options={{
+            fullWidth: qd.data.length === position + 1 && qd.data.length % 2 !== 0,
+            title: item.subtipo_inst
+          }} />
+      )
     )
   }
 
+  drawCardGraph(qd: QueryData) {
+    return (
+      <Card
+        type={qd.cardConfig.type}
+        data={qd.data}
+        options={{
+          ...qd.cardConfig.options,
+          fullWidth: true,
+          title: qd.name,
+        }} />
+    )
+  }
+
+  renderCards(loading: boolean) {
+    // Generate data for each filter type into state
+    const { queryData, preloader } = this.state;
+
+    // It should only be run the first time or when redux enters a new filter
+    if (!loading && !preloader && !queryData.length) {
+      this.buildQueryData();
+    }
+
+    return queryData.map(
+      (qd: QueryData) => this.valideCardType(qd)
+    );
+  }
+
   renderComponent = (ds: DataSource, info: IMDataSourceInfo) => {
-    // const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
-    const { loading } = this.state;
+    const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
+    const { preloader } = this.state;
+    const territoryLabels = getTerritoryLabels(this.state.filters);
+    const periodLabels = getPeriodLabels(this.state.filters);
 
     this.setState({ refresh: false });
     return (
       <div className="fi-graph" style={this.getInlineStyle()}>
-        {loading && (
+        {preloader || loading && (
           <div className="wrapper-preloader">
             <div className="preloader" />
           </div>
         )}
         <header>
           <div className="right-wrapper">
-            <h1>
-              Colombia
-            </h1>
+            {territoryLabels.map((label: string, index: number) => (
+              <h1 title={label} className={territoryLabels.length - 1 !== index ? 'small' : ''}>
+                {label}
+              </h1>
+            ))}
           </div>
-          <h2>Feb - 2020</h2>
+          <h2>{periodLabels}</h2>
           <div className="wrapper-filter-status" ref={this.state.wrapperFilterStatusRef}>
             <FilterStatus removeFilter={this.handleRemoveFilter} filters={this.state.filterStatus} />
           </div>
         </header>
-        <main className={`${loading ? 'loading' : ''}`}>
-          {this.renderCards()}
+        <main className={`${preloader || loading ? 'loading' : ''}`}>
+          {this.renderCards(loading)}
         </main>
       </div>
     )
