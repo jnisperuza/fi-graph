@@ -118,8 +118,8 @@ export const DEFAULT_FILTER = [
     label: 'SUBTIPO',
     value: [
       'CIF CONTRATOS',
-      'CRED COLOCACIONES',
-      'CRED SALDOS',
+      'CRE COLOCACIONES',
+      'CRE SALDOS',
       'FAG EXPEDIDAS',
       'FAG PAGADAS',
       'FAG VIGENTES',
@@ -193,16 +193,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opmfr_sum DESC']
     }
   },
   {
@@ -215,12 +215,12 @@ export const QUERY_SCHEMA = [
         fieldCategory: 'interm',
         serieConfig: [{
           name: 'Fuente de Financiamiento',
-          yField: 'total_opif_sum'
+          yField: 'total_opmfr_sum'
         }],
         tooltipConfig: {
           xField: 'interm',
           xFieldLabel: 'Cantidad:',
-          customField: 'valor_opif_sum',
+          customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
       }
@@ -231,16 +231,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC'],
+      orderByFields: ['total_opmfr_sum DESC'],
       pageSize: 10
     }
   },
@@ -261,12 +261,12 @@ export const QUERY_SCHEMA = [
         fieldCategory: 'dpto_cnmbr',
         serieConfig: [{
           name: 'territorio',
-          yField: 'total_opif_sum'
+          yField: 'total_opmfr_sum'
         }],
         tooltipConfig: {
           xField: 'dpto_cnmbr',
           xFieldLabel: 'Cantidad:',
-          customField: 'valor_opif_sum',
+          customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
       }
@@ -277,16 +277,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC'],
+      orderByFields: ['total_opmfr_sum DESC'],
       pageSize: 10
     }
   },
@@ -299,12 +299,12 @@ export const QUERY_SCHEMA = [
         fieldCategory: 'tipo_interm',
         serieConfig: [{
           name: 'tipo intermediario',
-          yField: 'total_opif_sum'
+          yField: 'total_opmfr_sum'
         }],
         tooltipConfig: {
           xField: 'tipo_interm',
           xFieldLabel: 'Cantidad:',
-          customField: 'valor_opif_sum',
+          customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
       }
@@ -315,16 +315,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opmfr_sum DESC']
     }
   },
   {
@@ -344,12 +344,12 @@ export const QUERY_SCHEMA = [
         fieldCategory: 'cadena',
         serieConfig: [{
           name: 'distribucion de cadena',
-          yField: 'total_opif_sum'
+          yField: 'total_opmfr_sum'
         }],
         tooltipConfig: {
           xField: 'cadena',
           xFieldLabel: 'Cantidad:',
-          customField: 'valor_opif_sum',
+          customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
       }
@@ -360,16 +360,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opmfr_sum DESC']
     }
   },
   {
@@ -381,12 +381,12 @@ export const QUERY_SCHEMA = [
         fieldCategory: 'tipo_productor',
         serieConfig: [{
           name: 'tipo productor',
-          yField: 'total_opif_sum'
+          yField: 'total_opmfr_sum'
         }],
         tooltipConfig: {
           xField: 'tipo_productor',
           xFieldLabel: 'Cantidad:',
-          customField: 'valor_opif_sum',
+          customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
       }
@@ -397,16 +397,16 @@ export const QUERY_SCHEMA = [
       outStatistics: [
         {
           statisticType: 'sum',
-          onStatisticField: 'total_opif',
-          outStatisticFieldName: 'total_opif_sum'
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
         },
         {
           statisticType: 'sum',
-          onStatisticField: 'valor_opif',
-          outStatisticFieldName: 'valor_opif_sum'
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opmfr_sum DESC']
     }
   }
 ];
