@@ -8,7 +8,8 @@ const getDBField = (identifiers: Filter[], value: string) => {
         item => String(value).includes(String(item.value)) || String(item.value).includes(String(value))
     );
     if (found) {
-        return DB_FIELDS[found.label];
+        const fieldName = String(found.label).toLowerCase();
+        return DB_FIELDS[fieldName];
     }
 }
 
@@ -51,9 +52,11 @@ export const where = (filterList: Filter[]) => {
         // All items should are arrays
         if (filterList[key] instanceof Array) {
             filterList[key].forEach((filter: Filter, _index: number) => {
-                const value = filter.type === 'number' ? filter.value : `'${filter.value}'`;
-                where += `${filter.field} = ${value} ${_index + 1 !== filterList[key].length ? 'or' :
-                    (index + 1 !== Object.keys(filterList).length ? 'and' : '')} `;
+                if (filter.value) {
+                    const value = filter.type === 'number' ? filter.value : `'${filter.value}'`;
+                    where += `${filter.field} = ${value} ${_index + 1 !== filterList[key].length ? 'or' :
+                        (index + 1 !== Object.keys(filterList).length ? 'and' : '')} `;
+                }
             });
         } else {
             // fallback action

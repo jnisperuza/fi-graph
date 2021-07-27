@@ -35,14 +35,9 @@ function FilterStatus(props: FilterStatus) {
         }
     }
 
-    const handleRemoveFilter = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, filter: string) => {
-        const parent = event.currentTarget.parentNode.parentNode;
-        const badge = event.currentTarget.parentNode;
+    const handleRemoveFilter = (filter: string) => {
         removeFilter(filter);
         handleToggleButton();
-        if (parent && badge) {
-            parent.removeChild(badge);
-        }
     }
 
     return (
@@ -53,7 +48,7 @@ function FilterStatus(props: FilterStatus) {
                         {filters.map((filter, index) => (
                             <div className="badge" key={index} title={filter}>
                                 <span>{filter}</span>
-                                <button type="button" onClick={e => handleRemoveFilter(e, filter)}>
+                                <button type="button" onClick={() => handleRemoveFilter(filter)}>
                                     <FontAwesomeIcon icon={faTimes} />
                                 </button>
                             </div>

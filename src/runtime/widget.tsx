@@ -65,7 +65,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
 
   handleRemoveFilter(filter: string) {
     const { filters } = this.state;
-    const found = filters.find(item => item.value.includes(filter));
+    const found = filters.find(item => String(item?.value).includes(filter));
 
     if (found) {
       const filterToClean = { ...found };
@@ -100,7 +100,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   buildQueries() {
     const { filters } = this.state;
     const formattedFilters = unifyFilters(filters);
-    const whereList = formattedFilters.map(item => where(item.filterList));
+    const whereList = formattedFilters.map(item => where(item.filterList)).filter(item => item);
     const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
       //Unify all where
       querySchema.query.where = whereList.join(' and ').trim();
@@ -157,11 +157,17 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
         if (item >= 1 && item <= 12) {
           return SHORT_MONTH_NAMES[item];
         }
+        // Zero (for year validation)
+        if (item == 0) {
+          return;
+        }
         // Default value
         else {
           return item;
         }
-      });
+      })
+        // Remove null or undefined values
+        .filter((item: string | number) => item);
 
       this.setState({ filterStatus: filterStatusFormatted });
     }
