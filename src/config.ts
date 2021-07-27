@@ -58,6 +58,7 @@ export interface Hide {
 
 export interface CardConfig {
   type: CardType;
+  id?: number; // to control level dependencies
   hide?: Hide[];
   options?: CardOptions;
 }
@@ -183,9 +184,10 @@ export const QUERY_SCHEMA = [
    * WHERE: Will be updated by dynamic filters '1 = 1' works as fallback
    */
   {
-    name: 'instrumentos',
+    name: 'Instrumentos',
     cardConfig: {
       type: CardType.Amount,
+      id: 1,
     },
     query: {
       where: '1=1',
@@ -206,11 +208,10 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    // Periodo de tiempo: Grafica de barras del número de Operaciones distibuidas
-    // por Fuente de Financiamiento para el año seleccionado o periodo vigente.
     name: 'Fuente de Financiamiento',
     cardConfig: {
       type: CardType.Bar,
+      id: 2,
       options: {
         fieldCategory: 'interm',
         serieConfig: [{
@@ -219,7 +220,7 @@ export const QUERY_SCHEMA = [
         }],
         tooltipConfig: {
           xField: 'interm',
-          xFieldLabel: 'Cantidad:',
+          xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
@@ -245,11 +246,10 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    // Territorio: Grafica de Barras del Top 10 Departamentos por número de operaciones 
-    // (cuando aplique: si el usuario NO selecciona un depto o un municipio.
     name: 'Territorio',
     cardConfig: {
       type: CardType.Bar,
+      id: 3,
       hide: [{
         field: 'label',
         value: 'MUNICIPIO'
@@ -265,7 +265,7 @@ export const QUERY_SCHEMA = [
         }],
         tooltipConfig: {
           xField: 'dpto_cnmbr',
-          xFieldLabel: 'Cantidad:',
+          xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
@@ -291,10 +291,10 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    // Gáfico de barras de total de operaciones por Tipo Intermediario.
     name: 'Tipo intermediario',
     cardConfig: {
       type: CardType.Bar,
+      id: 4,
       options: {
         fieldCategory: 'tipo_interm',
         serieConfig: [{
@@ -303,7 +303,7 @@ export const QUERY_SCHEMA = [
         }],
         tooltipConfig: {
           xField: 'tipo_interm',
-          xFieldLabel: 'Cantidad:',
+          xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
@@ -328,11 +328,10 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    // Gráficas de barras de la distribucón de las cifras de total del
-    // número de operaciones y valor de las operacione
     name: 'Distribución de Cadena',
     cardConfig: {
       type: CardType.Bar,
+      id: 5,
       hide: [{
         field: 'label',
         value: 'CADENA PRODUCTIVA'
@@ -348,7 +347,7 @@ export const QUERY_SCHEMA = [
         }],
         tooltipConfig: {
           xField: 'cadena',
-          xFieldLabel: 'Cantidad:',
+          xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }
@@ -373,10 +372,52 @@ export const QUERY_SCHEMA = [
     }
   },
   {
+    name: 'Distribución de Cadena',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 5,
+      hide: [{
+        field: 'label',
+        value: 'ESLABON'
+      }],
+      options: {
+        fieldCategory: 'eslabon',
+        serieConfig: [{
+          name: 'distribucion de cadena',
+          yField: 'total_opmfr_sum'
+        }],
+        tooltipConfig: {
+          xField: 'eslabon',
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opmfr_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['eslabon'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opmfr',
+          outStatisticFieldName: 'total_opmfr_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opmfr',
+          outStatisticFieldName: 'valor_opmfr_sum'
+        }
+      ],
+      orderByFields: ['total_opmfr_sum DESC']
+    }
+  },
+  {
     // Gráfico de torta de total de operaciones por Tipo Productor.
     name: 'Tipo productor',
     cardConfig: {
       type: CardType.Pie,
+      id: 6,
       options: {
         fieldCategory: 'tipo_productor',
         serieConfig: [{
@@ -385,7 +426,7 @@ export const QUERY_SCHEMA = [
         }],
         tooltipConfig: {
           xField: 'tipo_productor',
-          xFieldLabel: 'Cantidad:',
+          xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opmfr_sum',
           customFieldLabel: 'Valor: $'
         }

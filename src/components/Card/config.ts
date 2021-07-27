@@ -52,7 +52,7 @@ export const PIE_OPTIONS = {
             cursor: 'pointer',
             dataLabels: {
                 enabled: true,
-                format: '<b>{point.name}</b>'
+                format: '{point.name}'
             },
         }
     }

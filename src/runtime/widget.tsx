@@ -25,10 +25,10 @@ import {
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
 import { CardType } from '../components/Card/config';
-import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels } from '../helpers/process';
+import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules } from '../helpers/process';
 
 import "./widget.scss";
-
+import { SHORT_MONTH_NAMES } from '../helpers/utils';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -41,7 +41,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     filters: [],
     filterStatus: [],
     queries: [],
-    queryData: []
+    queryData: [],
   };
 
   constructor(props: any) {
@@ -106,8 +106,9 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       querySchema.query.where = whereList.join(' and ').trim();
       return querySchema;
     });
+    const queriesAppliedRules = applyRules(queries, filters);
     // Update queries state
-    this.setState({ queries });
+    this.setState({ queries: queriesAppliedRules });
     // Clear previous data
     this.setState({ queryData: [] });
   }
@@ -151,7 +152,18 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       const filterStatus = haveIncomingFilters ? filters.map((filter) => filter.value)
         .reduce((accumulator, currentValue) => accumulator.concat(currentValue), []) : [];
 
-      this.setState({ filterStatus });
+      const filterStatusFormatted = filterStatus.map((item: string | number) => {
+        // Format month
+        if (item >= 1 && item <= 12) {
+          return SHORT_MONTH_NAMES[item];
+        }
+        // Default value
+        else {
+          return item;
+        }
+      });
+
+      this.setState({ filterStatus: filterStatusFormatted });
     }
     // Time to wait for redux to update
     setTimeout(dispatch);
@@ -180,18 +192,6 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   }
 
   valideCardType(qd: QueryData) {
-    const { filters } = this.state;
-    const { hide } = qd.cardConfig;
-    let ruleFoundHide = false;
-
-    if (hide?.length) {
-      hide.forEach((rule: Hide) => {
-        const found = filters.find(filter => filter[rule.field] === rule.value);
-        if (found) ruleFoundHide = !!found;
-      });
-    }
-
-    if (ruleFoundHide) return;
     if (qd.cardConfig.type === CardType.Amount) {
       return this.drawCardAmount(qd);
     }

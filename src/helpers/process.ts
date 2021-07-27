@@ -1,6 +1,6 @@
 import Highcharts from 'highcharts';
 import { CardOptions } from "../components/Card/config";
-import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType } from "../config";
+import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, Query } from "../config";
 import { groupBy, SHORT_MONTH_NAMES } from "./utils";
 
 const getDBField = (identifiers: Filter[], value: string) => {
@@ -156,4 +156,44 @@ export const getTerritoryLabels = (filter: Filter[]): string[] => {
         }
     }
     return labels;
+}
+
+export const applyRules = (queries: Query[], filters: Filter[]): Query[] => {
+    // Clear result
+    const removeDuplicatesId = (array: Query[]) => {
+        const result: Query[] = [];
+        array.forEach(item => {
+            // check if it already exists in the new array, only the first one added with that Id should remain
+            const found = result.find(_item => _item?.cardConfig?.id === item.cardConfig?.id);
+            if (!found) {
+                result.push(item);
+            }
+        });
+        return result;
+    }
+    const toRemove = [];
+    const withRuleHide = queries.filter(query => query.cardConfig?.hide);
+    withRuleHide.forEach(query => {
+        query.cardConfig.hide.forEach((rule: Hide) => {
+            const found = filters.find(filter => filter[rule.field] === rule.value);
+            if (found) {
+                const alreadyExists = toRemove.find(_query => JSON.stringify(_query) === JSON.stringify(query));
+                if (!alreadyExists) {
+                    toRemove.push(query);
+                }
+            }
+        });
+    });
+    // If it does not find any queries to remove, the deduplication is applied directly to the array 'queries'
+    if (!toRemove.length) {
+        // It is validated if there are elements with repeated configuration Id, to leave the first one
+        return removeDuplicatesId(queries);
+    } else {
+        // A new list is obtained from the array 'queries', excluding those that correspond
+        const withRulesApplied = queries.filter(
+            _query => JSON.stringify(_query) !== JSON.stringify(toRemove.find(query => JSON.stringify(_query) === JSON.stringify(query)))
+        );
+        // It is validated if there are elements with repeated configuration Id, to leave the first one
+        return removeDuplicatesId(withRulesApplied);
+    }
 }
