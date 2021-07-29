@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
-import { CardType, Card, PIE_OPTIONS, BAR_OPTIONS } from './config';
-
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import { CardType, Card, PIE_OPTIONS, BAR_OPTIONS } from './config';
+import { currencyFormat, numberFormat } from '../../helpers/utils';
+import { formatDataBar, formatDataPie } from '../../helpers/process';
 
 import './Card.scss';
-import { currencyFormat, numberFormat } from '../../helpers/utils';
-import { formatDataBar, formatDataMultiserie, formatDataPie } from '../../helpers/process';
 
 function Card(props: Card) {
-    const { type, options, data } = props;
+    const { type, options, data, handleViewMore } = props;
+    const [wrapperRef] = useState(React.createRef<HTMLDivElement>());
+
+    useEffect(() => {
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [])
+
+    const handleResize = () => {
+        const { width } = wrapperRef?.current && wrapperRef.current.getBoundingClientRect();
+        Highcharts.charts.forEach((chart) => {
+            if (chart) {
+                chart.setSize(width - 20);
+            }
+        });
+    }
+
+    const handleViewMoreCard = (card: Card) => {
+        if (handleViewMore instanceof Function) {
+            handleViewMore(card);
+        }
+    }
 
     const renderAmountType = () => (
-        <div className={`Card amount ${options?.fullWidth ? 'full-width' : 'half-width'}`}>
+        <div className={`Card amount ${options?.fullWidth ? 'full-width' : 'half-width'}`} ref={wrapperRef}>
             <div className="header">
                 <h1 title={options.title}>{options.title}</h1>
             </div>
@@ -35,7 +57,7 @@ function Card(props: Card) {
                 </ul>
             </div>
             <div className="actions">
-                <button className="view-more">
+                <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                     <FontAwesomeIcon icon={faSearch} />
                     <span>Ver más</span>
                 </button>
@@ -55,11 +77,11 @@ function Card(props: Card) {
             tooltip
         }
         return (
-            <div className="Card bar">
+            <div className="Card bar" ref={wrapperRef}>
                 <div className="header">
                     <h1 title={options.title}>{options.title}</h1>
                     <div className="description">
-                        <button className="view-more">
+                        <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                             <FontAwesomeIcon icon={faSearch} />
                             <span>Ver más</span>
                         </button>
@@ -69,6 +91,7 @@ function Card(props: Card) {
                     <>
                         {data?.length ? (
                             <HighchartsReact
+                                containerProps={BAR_OPTIONS.containerProps}
                                 highcharts={Highcharts}
                                 options={ChartOptions}
                             />
@@ -83,30 +106,6 @@ function Card(props: Card) {
         )
     }
 
-    const renderMultiserieType = () => (
-        <div className="Card multiserie">
-            <div className="header">
-                <h1 title={options.title}>{options.title}</h1>
-                <div className="description">
-                    <span title={options.subtitle}>{options.subtitle}</span>
-                    <button className="view-more">
-                        <FontAwesomeIcon icon={faSearch} />
-                        <span>Ver más</span>
-                    </button>
-                </div>
-            </div>
-            <div className="content">
-                {data?.length ? (
-                    <span>MultiSerie</span>
-                ) : (
-                    <div className="empty-data">
-                        <span>No hay datos</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-
     const renderPieType = () => {
         const { series, tooltip } = formatDataPie(options, data);
         const ChartOptions = {
@@ -116,11 +115,11 @@ function Card(props: Card) {
         }
 
         return (
-            <div className="Card pie">
+            <div className="Card pie" ref={wrapperRef}>
                 <div className="header">
                     <h1 title={options.title}>{options.title}</h1>
                     <div className="description">
-                        <button className="view-more">
+                        <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                             <FontAwesomeIcon icon={faSearch} />
                             <span>Ver más</span>
                         </button>
@@ -130,6 +129,7 @@ function Card(props: Card) {
                     <>
                         {data?.length ? (
                             <HighchartsReact
+                                containerProps={PIE_OPTIONS.containerProps}
                                 highcharts={Highcharts}
                                 options={ChartOptions}
                             />
@@ -149,7 +149,6 @@ function Card(props: Card) {
             {type === CardType.Amount && renderAmountType()}
             {type === CardType.Bar && renderBarType()}
             {type === CardType.Pie && renderPieType()}
-            {type === CardType.Multiserie && renderMultiserieType()}
         </>
     )
 }

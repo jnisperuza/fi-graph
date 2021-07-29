@@ -18,17 +18,17 @@ import {
   QUERY_SCHEMA,
   DatasourceResponse,
   Query,
-  QueryData,
-  Hide
+  QueryData
 } from '../config';
 
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
-import { CardType } from '../components/Card/config';
-import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules } from '../helpers/process';
+import { CardType, Card as ICard } from '../components/Card/config';
+import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus } from '../helpers/process';
+import { SHORT_MONTH_NAMES } from '../helpers/utils';
 
 import "./widget.scss";
-import { SHORT_MONTH_NAMES } from '../helpers/utils';
+import Dashboard from '../components/Dashboard/Dashboard';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -42,11 +42,14 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     filterStatus: [],
     queries: [],
     queryData: [],
+    selectedCard: null,
   };
 
   constructor(props: any) {
     super(props);
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
+    this.handleUIRefresh = this.handleUIRefresh.bind(this);
+    this.handleViewMore = this.handleViewMore.bind(this);
   }
 
   getOriginDataSource() {
@@ -78,6 +81,15 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     }
   }
 
+  handleUIRefresh() {
+    this.setState({ refresh: true });
+  }
+
+  handleViewMore(card?: ICard) {
+    this.setState({ selectedCard: card });
+    this.setState({ refresh: true });
+  }
+
   /**
    * Map the state your widget needs
    * @param state
@@ -107,6 +119,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       return querySchema;
     });
     const queriesAppliedRules = applyRules(queries, filters);
+    console.log(queriesAppliedRules);
     // Update queries state
     this.setState({ queries: queriesAppliedRules });
     // Clear previous data
@@ -149,27 +162,10 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const dispatch = () => {
       const { filters } = this.state;
       const haveIncomingFilters = !!this.props.widgetState?.filters?.length; // [] or null
-      const filterStatus = haveIncomingFilters ? filters.map((filter) => filter.value)
-        .reduce((accumulator, currentValue) => accumulator.concat(currentValue), []) : [];
+      const filterStatus = haveIncomingFilters ? filters.map((filter) => formatFilterStatus(filter))
+        .reduce((accumulator, currentValue) => accumulator.concat(currentValue.value), []).filter((item: string | number) => item) : [];
 
-      const filterStatusFormatted = filterStatus.map((item: string | number) => {
-        // Format month
-        if (item >= 1 && item <= 12) {
-          return SHORT_MONTH_NAMES[item];
-        }
-        // Zero (for year validation)
-        if (item == 0) {
-          return;
-        }
-        // Default value
-        else {
-          return item;
-        }
-      })
-        // Remove null or undefined values
-        .filter((item: string | number) => item);
-
-      this.setState({ filterStatus: filterStatusFormatted });
+      this.setState({ filterStatus });
     }
     // Time to wait for redux to update
     setTimeout(dispatch);
@@ -219,6 +215,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             amount: item.total_opif_sum,
             value: item.valor_opif_sum
           }}
+          handleViewMore={this.handleViewMore}
           options={{
             fullWidth: qd.data.length === position + 1 && qd.data.length % 2 !== 0,
             title: item.subtipo_inst
@@ -232,10 +229,11 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       <Card
         type={qd.cardConfig.type}
         data={qd.data}
+        handleViewMore={this.handleViewMore}
         options={{
           ...qd.cardConfig.options,
           fullWidth: true,
-          title: qd.name,
+          title: qd.name
         }} />
     )
   }
@@ -263,7 +261,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     this.setState({ refresh: false });
     return (
       <div className="fi-graph" style={this.getInlineStyle()}>
-        {preloader || loading && (
+        {preloader && (
           <div className="wrapper-preloader">
             <div className="preloader" />
           </div>
@@ -281,8 +279,11 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             <FilterStatus removeFilter={this.handleRemoveFilter} filters={this.state.filterStatus} />
           </div>
         </header>
-        <main className={`${preloader || loading ? 'loading' : ''}`}>
+        <main className={`${preloader || this.state.selectedCard ? 'locked' : ''}`}>
           {this.renderCards(loading)}
+          {this.state.selectedCard && (
+            <Dashboard selectedCard={this.state.selectedCard} handleViewMore={this.handleViewMore} />
+          )}
         </main>
       </div>
     )

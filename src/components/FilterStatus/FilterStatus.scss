@@ -111,9 +111,11 @@ $maxHeight: 300px;
     border-radius: 10px;
 
     span {
+      display: block;
       color: var(--white);
       font-size: 12px;
       text-align: center;
+      @include truncate();
       @include no-select();
     }
   }

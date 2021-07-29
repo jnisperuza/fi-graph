@@ -56,7 +56,9 @@ function FilterStatus(props: FilterStatus) {
                     </div>
                     :
                     <div className="last-update">
-                        <span>Última actualización de instrumentos financieros</span>
+                        <span title="Última actualización de instrumentos financieros">
+                            Última actualización de instrumentos financieros
+                        </span>
                     </div>
             }
             {showToggleButton && (

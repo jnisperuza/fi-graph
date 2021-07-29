@@ -6,12 +6,22 @@ Highcharts.setOptions({
         resetZoom: '⟲',
         decimalPoint: ',',
         thousandsSep: '.'
+    },
+    plotOptions: {
+        series: {
+            animation: false
+        }
     }
 });
 
 const COMMON_GRAPH_OPTIONS = {
+    containerProps: {
+        style: {
+            width: '100%',
+            height: '100%'
+        }
+    },
     chart: {
-        height: '170px',
         zoomType: 'xy',
         borderRadius: 4,
         backgroundColor: 'rgba(250, 250, 250, 0.5)',
@@ -62,7 +72,7 @@ export const BAR_OPTIONS = {
     ...COMMON_GRAPH_OPTIONS,
     chart: {
         ...COMMON_GRAPH_OPTIONS.chart,
-        type: 'column',
+        type: 'bar',
     },
     plotOptions: {
         column: {
@@ -72,7 +82,12 @@ export const BAR_OPTIONS = {
     },
     xAxis: {
         crosshair: true,
-        visible: false
+        visible: true,
+        labels: {
+            style: {
+                fontSize: '10px'
+            }
+        }
     },
     yAxis: {
         min: 0,
@@ -83,8 +98,7 @@ export const BAR_OPTIONS = {
 export enum CardType {
     Amount = 'AMOUNT',
     Pie = 'PIE',
-    Bar = 'BAR',
-    Multiserie = 'MULTISERIE',
+    Bar = 'BAR'
 }
 
 export interface SerieConfig {
@@ -113,6 +127,7 @@ export interface Card {
     type: CardType;
     data: any;
     options?: CardOptions;
+    handleViewMore?: (card: Card) => void;
 }
 
 export type IMCard = ImmutableObject<Card>;

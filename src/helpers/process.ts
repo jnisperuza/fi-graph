@@ -8,13 +8,12 @@ const getDBField = (identifiers: Filter[], value: string) => {
         item => String(value).includes(String(item.value)) || String(item.value).includes(String(value))
     );
     if (found) {
-        const fieldName = String(found.label).toLowerCase();
-        return DB_FIELDS[fieldName];
+        return DB_FIELDS[found.field];
     }
 }
 
 const formatFilterList = (identifiers: Filter[], flatted: string[]) => {
-    const identified = flatted.map(item => ({ ...getDBField(identifiers, item), value: item }))
+    const identified = flatted.map(item => ({ ...getDBField(identifiers, item), value: item }));
     // Grouped for 'field' property can use 'OR' sentence
     return groupBy(identified, 'field');
 }
@@ -32,8 +31,17 @@ export const unifyFilters = (filters: Filter[]) => {
             // Search for each filterType and build a single array
             const flatted: string[] = filters.filter((_filter: Filter) => _filter.filterType === filter.filterType)
                 .reduce((accumulator, currentValue) => {
-                    identifiers.push(currentValue);
-                    return accumulator.concat(currentValue.value);
+                    const isArray = currentValue.value instanceof Array;
+                    // validate that the filters are not empty
+                    if (
+                        (isArray && currentValue.value.length) ||
+                        (!isArray && currentValue.value)
+                    ) {
+                        identifiers.push(currentValue);
+                        return accumulator.concat(currentValue.value);
+                    } else {
+                        return accumulator;
+                    }
                 }, []);
             // Add item
             listFlatted.push({
@@ -98,10 +106,6 @@ export const formatDataBar = (options: CardOptions, data: any) => {
     }
 }
 
-export const formatDataMultiserie = (data: any) => {
-    return data;
-}
-
 export const formatDataPie = (options: CardOptions, data: any) => {
     const { fieldCategory, serieConfig, tooltipConfig } = options;
     const response = { series: [], tooltip: {} };
@@ -126,15 +130,38 @@ export const formatDataPie = (options: CardOptions, data: any) => {
     }
 }
 
+export const formatFilterStatus = (last: Filter) => {
+    switch (last.field) {
+        // PERIOD
+        case 'mes':
+            if (last.value instanceof Array) {
+                return last.value.map((month: string | number) => SHORT_MONTH_NAMES[month]).toString();
+            } else {
+                return SHORT_MONTH_NAMES[last.value];
+            }
+        // TERRITORY
+        case 'mfront':
+        case 'zrc':
+        case 'mzeii':
+        case 'zomac':
+            if (last.value instanceof Array) {
+                return last.value.map((item: string) => `${last.label} (${item})`);
+            } else {
+                return [`${last.label} (${last.value})`];
+            }
+        default:
+            if (last.value instanceof Array) {
+                return last.value.toString();
+            } else {
+                return last.value;
+            }
+    }
+}
+
 export const getPeriodLabels = (filter: Filter[]) => {
     const periodFilter = filter.filter(filter => filter.filterType === FilterType.Period);
     if (periodFilter.length) {
-        const last = periodFilter[periodFilter.length - 1];
-
-        if (last.label === 'MES') {
-            return Array.from(last.value).map(month => SHORT_MONTH_NAMES[month]).toString();
-        }
-        return last.value.toString();
+        return formatFilterStatus(periodFilter[periodFilter.length - 1]);
     }
 }
 
@@ -143,14 +170,14 @@ export const getTerritoryLabels = (filter: Filter[]): string[] => {
     const labels = ['Colombia'];
     // Get the last two territory filters
     if (territoryFilter.length) {
-        const lastTerritoryValues = territoryFilter[territoryFilter.length - 1].value;
+        const lastTerritoryValues = formatFilterStatus(territoryFilter[territoryFilter.length - 1]);
         if (lastTerritoryValues.length) {
             const last = lastTerritoryValues[lastTerritoryValues.length - 1];
             labels.push(last);
         }
     }
     if (territoryFilter.length > 1) {
-        const penultimateTerritoryValues = territoryFilter[territoryFilter.length - 2].value;
+        const penultimateTerritoryValues = formatFilterStatus(territoryFilter[territoryFilter.length - 2]);
         if (penultimateTerritoryValues.length) {
             const penultimate = penultimateTerritoryValues[penultimateTerritoryValues.length - 1];
             labels.push(penultimate);

@@ -238,11 +238,6 @@
     }
   }
 
-  // Multiserie Type
-  &.multiserie {
-    @extend .graphClass;
-  }
-
   // Pie and Bar Type
   &.pie,
   &.bar {

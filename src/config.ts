@@ -1,7 +1,7 @@
 import { ImmutableObject } from 'seamless-immutable';
 // @ts-ignore
 import { React, FeatureLayerQueryParams } from 'jimu-core';
-import { CardOptions, CardType } from './components/Card/config';
+import { Card, CardOptions, CardType } from './components/Card/config';
 
 export interface State {
   query: FeatureLayerQueryParams;
@@ -12,6 +12,7 @@ export interface State {
   filterStatus: string[];
   queries: Query[];
   queryData: QueryData[];
+  selectedCard: Card;
 }
 
 export type IMWidgetState = ImmutableObject<State>;
@@ -117,6 +118,7 @@ export const DEFAULT_FILTER = [
   {
     filterType: FilterType.Instrument,
     label: 'SUBTIPO',
+    field: 'subtipo_inst',
     value: [
       'CIF CONTRATOS',
       'CRE COLOCACIONES',
@@ -132,50 +134,129 @@ export const DEFAULT_FILTER = [
   },
 ];
 
-// Keys normalized to lowercase (label property from filters)
 export const DB_FIELDS = {
-  'subtipo': {
+  instrumento: {
+    field: 'instrumento',
+    type: 'string'
+  },
+  subtipo_inst: {
     field: 'subtipo_inst',
     type: 'string'
   },
-  'año': {
+  anio: {
     field: 'anio',
     type: 'number'
   },
-  'semestre': {
+  semestre: {
     field: 'semestre',
     type: 'string'
   },
-  'trimestre': {
+  trimestre: {
     field: 'trimestre',
     type: 'string'
   },
-  'mes': {
+  per_gob: {
+    field: 'per_gob',
+    type: 'string'
+  },
+  mes: {
     field: 'mes',
     type: 'number'
   },
-  'departamento': {
+  reg_colombia: {
+    field: 'reg_colombia',
+    type: 'string'
+  },
+  dpto_cnmbr: {
     field: 'dpto_cnmbr',
     type: 'string'
   },
-  'municipio': {
+  mpio_cnmbr: {
     field: 'mpio_cnmbr',
     type: 'string'
   },
-  'categoria municipales': {
+  mpio_ccnct: {
+    field: 'mpio_ccnct',
+    type: 'string'
+  },
+  pdet: {
+    field: 'pdet',
+    type: 'string'
+  },
+  categ_rur: {
     field: 'categ_rur',
     type: 'string'
   },
-  'cadena productiva': {
+  zomac: {
+    field: 'zomac',
+    type: 'string'
+  },
+  mzeii: {
+    field: 'mzeii',
+    type: 'string'
+  },
+  zrc: {
+    field: 'zrc',
+    type: 'string'
+  },
+  mfront: {
+    field: 'mfront',
+    type: 'string'
+  },
+  cadena: {
     field: 'cadena',
     type: 'string'
   },
-  'eslabon': {
-    field: 'cadena',
+  sector: {
+    field: 'sector',
     type: 'string'
   },
-  'tipo intermediario': {
+  reg_finagr: {
+    field: 'reg_finagr',
+    type: 'string'
+  },
+  eslabon: {
+    field: 'eslabon',
+    type: 'string'
+  },
+  destino: {
+    field: 'destino',
+    type: 'string'
+  },
+  sexo: {
+    field: 'sexo',
+    type: 'string'
+  },
+  tipo_accion: {
+    field: 'tipo_accion',
+    type: 'string'
+  },
+  tipo_cartera: {
+    field: 'tipo_cartera',
+    type: 'string'
+  },
+  interm: {
+    field: 'interm',
+    type: 'string'
+  },
+  tipo_interm: {
     field: 'tipo_interm',
+    type: 'string'
+  },
+  nat_juridica: {
+    field: 'nat_juridica',
+    type: 'string'
+  },
+  tipo_productor: {
+    field: 'tipo_productor',
+    type: 'string'
+  },
+  coloc_oficinas: {
+    field: 'coloc_oficinas',
+    type: 'string'
+  },
+  oficina: {
+    field: 'oficina',
     type: 'string'
   },
 };
@@ -209,14 +290,14 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    name: 'Fuente de Financiamiento',
+    name: 'Periodo de tiempo',
     cardConfig: {
       type: CardType.Bar,
       id: 2,
       options: {
         fieldCategory: 'interm',
         serieConfig: [{
-          name: 'Fuente de Financiamiento',
+          name: 'intermediario',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
@@ -243,7 +324,7 @@ export const QUERY_SCHEMA = [
         }
       ],
       orderByFields: ['total_opif_sum DESC'],
-      pageSize: 10
+      pageSize: 5
     }
   },
   {
@@ -252,16 +333,16 @@ export const QUERY_SCHEMA = [
       type: CardType.Bar,
       id: 3,
       hide: [{
-        field: 'label',
-        value: 'MUNICIPIO'
+        field: 'field',
+        value: 'mpio_cnmbr'
       }, {
-        field: 'label',
-        value: 'DEPARTAMENTO'
+        field: 'field',
+        value: 'dpto_cnmbr'
       }],
       options: {
         fieldCategory: 'dpto_cnmbr',
         serieConfig: [{
-          name: 'territorio',
+          name: 'departamento',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
@@ -288,7 +369,7 @@ export const QUERY_SCHEMA = [
         }
       ],
       orderByFields: ['total_opif_sum DESC'],
-      pageSize: 10
+      pageSize: 5
     }
   },
   {
@@ -325,25 +406,74 @@ export const QUERY_SCHEMA = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
     }
   },
   {
-    name: 'Distribución de Cadena',
+    name: 'Producto (Sector)',
     cardConfig: {
       type: CardType.Bar,
       id: 5,
       hide: [{
-        field: 'label',
-        value: 'CADENA PRODUCTIVA'
+        field: 'field',
+        value: 'cadena'
       }, {
-        field: 'label',
-        value: 'ESLABON'
+        field: 'field',
+        value: 'eslabon'
+      }],
+      options: {
+        fieldCategory: 'sector',
+        serieConfig: [{
+          name: 'sector',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xField: 'sector',
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['sector'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
+    }
+  },
+  {
+    name: 'Producto (Cadena)',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 6,
+      hide: [{
+        field: 'field',
+        value: 'sector'
+      }, {
+        field: 'field',
+        value: 'cadena'
+      }, {
+        field: 'field',
+        value: 'eslabon'
       }],
       options: {
         fieldCategory: 'cadena',
         serieConfig: [{
-          name: 'distribucion de cadena',
+          name: 'cadena',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
@@ -369,22 +499,23 @@ export const QUERY_SCHEMA = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
     }
   },
   {
-    name: 'Distribución de Cadena',
+    name: 'Producto (Eslabon)',
     cardConfig: {
       type: CardType.Bar,
-      id: 5,
+      id: 7,
       hide: [{
-        field: 'label',
-        value: 'ESLABON'
+        field: 'field',
+        value: 'eslabon'
       }],
       options: {
         fieldCategory: 'eslabon',
         serieConfig: [{
-          name: 'distribucion de cadena',
+          name: 'eslabon',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
@@ -410,15 +541,15 @@ export const QUERY_SCHEMA = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
     }
   },
   {
-    // Gráfico de torta de total de operaciones por Tipo Productor.
-    name: 'Tipo productor',
+    name: 'Característica productor',
     cardConfig: {
       type: CardType.Pie,
-      id: 6,
+      id: 8,
       options: {
         fieldCategory: 'tipo_productor',
         serieConfig: [{
