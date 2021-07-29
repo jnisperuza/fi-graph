@@ -25,10 +25,9 @@ import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
 import { CardType, Card as ICard } from '../components/Card/config';
 import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus } from '../helpers/process';
-import { SHORT_MONTH_NAMES } from '../helpers/utils';
+import Dashboard from '../components/Dashboard/Dashboard';
 
 import "./widget.scss";
-import Dashboard from '../components/Dashboard/Dashboard';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -119,7 +118,6 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       return querySchema;
     });
     const queriesAppliedRules = applyRules(queries, filters);
-    console.log(queriesAppliedRules);
     // Update queries state
     this.setState({ queries: queriesAppliedRules });
     // Clear previous data
@@ -163,7 +161,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       const { filters } = this.state;
       const haveIncomingFilters = !!this.props.widgetState?.filters?.length; // [] or null
       const filterStatus = haveIncomingFilters ? filters.map((filter) => formatFilterStatus(filter))
-        .reduce((accumulator, currentValue) => accumulator.concat(currentValue.value), []).filter((item: string | number) => item) : [];
+        .reduce((accumulator, currentValue) => accumulator.concat(currentValue), []).filter((item: string | number) => item) : [];
 
       this.setState({ filterStatus });
     }
@@ -274,7 +272,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
               </h1>
             ))}
           </div>
-          <h2>{periodLabels}</h2>
+          <div className="left-wrapper">
+            {periodLabels.map((label: string, index: number) => (
+              <h2 title={label} className={periodLabels.length - 1 !== index ? 'small' : ''}>
+                {label}
+              </h2>
+            ))}
+          </div>
           <div className="wrapper-filter-status" ref={this.state.wrapperFilterStatusRef}>
             <FilterStatus removeFilter={this.handleRemoveFilter} filters={this.state.filterStatus} />
           </div>

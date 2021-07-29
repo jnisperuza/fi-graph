@@ -158,29 +158,46 @@ export const formatFilterStatus = (last: Filter) => {
     }
 }
 
-export const getPeriodLabels = (filter: Filter[]) => {
-    const periodFilter = filter.filter(filter => filter.filterType === FilterType.Period);
+export const getPeriodLabels = (filter: Filter[]): string[] => {
+    const periodFilter = filter.filter(
+        filter => filter.filterType === FilterType.Period && (filter.value instanceof Array ? filter.value?.length : filter.value)
+    );
+    const currentYear = String(new Date().getFullYear()); // TODO: query from datasource
+    const labels = [currentYear];
+    // Get the last two territory filters
     if (periodFilter.length) {
-        return formatFilterStatus(periodFilter[periodFilter.length - 1]);
+        const lastPeriodFilter = formatFilterStatus(periodFilter[periodFilter.length - 1]);
+        if (lastPeriodFilter) {
+            labels.unshift(lastPeriodFilter);
+        }
     }
+    if (periodFilter.length > 1) {
+        const penultimatePeriodFilter = formatFilterStatus(periodFilter[periodFilter.length - 2]);
+        if (penultimatePeriodFilter) {
+            labels.unshift(penultimatePeriodFilter);
+            // Remove the first item, this array allow two items
+            labels.pop();
+        }
+    }
+    return labels;
 }
 
 export const getTerritoryLabels = (filter: Filter[]): string[] => {
-    const territoryFilter = filter.filter(filter => filter.filterType === FilterType.Territory);
+    const territoryFilter = filter.filter(
+        filter => filter.filterType === FilterType.Territory && (filter.value instanceof Array ? filter.value?.length : filter.value)
+    );
     const labels = ['Colombia'];
     // Get the last two territory filters
     if (territoryFilter.length) {
         const lastTerritoryValues = formatFilterStatus(territoryFilter[territoryFilter.length - 1]);
-        if (lastTerritoryValues.length) {
-            const last = lastTerritoryValues[lastTerritoryValues.length - 1];
-            labels.push(last);
+        if (lastTerritoryValues) {
+            labels.push(lastTerritoryValues);
         }
     }
     if (territoryFilter.length > 1) {
         const penultimateTerritoryValues = formatFilterStatus(territoryFilter[territoryFilter.length - 2]);
-        if (penultimateTerritoryValues.length) {
-            const penultimate = penultimateTerritoryValues[penultimateTerritoryValues.length - 1];
-            labels.push(penultimate);
+        if (penultimateTerritoryValues) {
+            labels.push(penultimateTerritoryValues);
             // Remove the first item, this array allow two items
             labels.shift();
         }

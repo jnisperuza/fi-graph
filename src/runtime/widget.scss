@@ -87,6 +87,13 @@ div.error-message {
       }
     }
 
+    div.left-wrapper {
+      @extend .right-wrapper;
+      &::after {
+        display: none;
+      }
+    }
+
     h1,
     h2 {
       display: block;
@@ -114,6 +121,11 @@ div.error-message {
     h2 {
       text-align: left;
       @include truncate();
+
+      &.small {
+        font-size: 15px;
+        color: var(--primary);
+      }
     }
 
     div.wrapper-filter-status {
