@@ -12,7 +12,9 @@ export interface State {
   filterStatus: string[];
   queries: Query[];
   queryData: QueryData[];
+  queryDataDashboard: QueryData[];
   selectedCard: Card;
+  initialData: InitialData[];
 }
 
 export type IMWidgetState = ImmutableObject<State>;
@@ -34,7 +36,8 @@ export enum FilterType {
   Instrument = 'INSTRUMENTO',
   Period = 'PERIODO',
   Territory = 'TERRITORIO',
-  Chain = 'CADENA',
+  Product = 'PRODUCTO',
+  Producer = 'PRODUCTOR',
   Intermediary = 'INTERMEDIARIO',
 }
 
@@ -65,14 +68,21 @@ export interface CardConfig {
 }
 
 export interface Query {
+  parentCard?: number;
+  type: FilterType;
   name: string;
   cardConfig: CardConfig;
   query: any;
 }
 
+export interface InitialData {
+  anio: number;
+}
+
 export interface QueryData {
   name: string;
   cardConfig: CardConfig;
+  query: Query;
   data: any;
 }
 
@@ -261,15 +271,580 @@ export const DB_FIELDS = {
   },
 };
 
-export const QUERY_SCHEMA = [
+export const QUERY_SCHEMA_DASHBOARD: Query[] = [
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'Nivel ruralidad',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 1,
+      options: {
+        fieldCategory: 'categ_rur',
+        viewMore: false,
+        serieConfig: [{
+          name: 'categ_rur',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['categ_rur'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'PDET',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 2,
+      options: {
+        fieldCategory: 'pdet',
+        viewMore: false,
+        serieConfig: [{
+          name: 'pdet',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['pdet'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'ZOMAC',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 3,
+      options: {
+        fieldCategory: 'zomac',
+        viewMore: false,
+        serieConfig: [{
+          name: 'zomac',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['zomac'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'ZEII',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 4,
+      options: {
+        fieldCategory: 'mzeii',
+        viewMore: false,
+        serieConfig: [{
+          name: 'mzeii',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['mzeii'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'Zona de reserva campesina',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 5,
+      options: {
+        fieldCategory: 'zrc',
+        viewMore: false,
+        serieConfig: [{
+          name: 'zrc',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['zrc'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 3,
+    type: FilterType.Territory,
+    name: 'Municipios frontera',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 6,
+      options: {
+        fieldCategory: 'mfront',
+        viewMore: false,
+        serieConfig: [{
+          name: 'mfront',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['mfront'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 4,
+    type: FilterType.Intermediary,
+    name: 'Tipo de intermediario',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 7,
+      options: {
+        fieldCategory: 'tipo_interm',
+        viewMore: false,
+        serieConfig: [{
+          name: 'tipo_interm',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['tipo_interm'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  // {
+  //   parentCard: 4,
+  //   type: FilterType.Intermediary,
+  //   name: 'Número oficinas',
+  //   cardConfig: {
+  //     type: CardType.Bar,
+  //     id: 8,
+  //     options: {
+  //       fieldCategory: 'coloc_oficinas',
+  //       viewMore: false,
+  //       serieConfig: [{
+  //         name: 'coloc_oficinas',
+  //         yField: 'total_opif_sum'
+  //       }],
+  //       tooltipConfig: {
+  //         xFieldLabel: 'Nro. operaciones:',
+  //         customField: 'valor_opif_sum',
+  //         customFieldLabel: 'Valor: $'
+  //       }
+  //     }
+  //   },
+  //   query: {
+  //     where: '1=1',
+  //     groupByFieldsForStatistics: ['coloc_oficinas'],
+  //     outStatistics: [
+  //       {
+  //         statisticType: 'sum',
+  //         onStatisticField: 'total_opif',
+  //         outStatisticFieldName: 'total_opif_sum'
+  //       },
+  //       {
+  //         statisticType: 'sum',
+  //         onStatisticField: 'valor_opif',
+  //         outStatisticFieldName: 'valor_opif_sum'
+  //       }
+  //     ],
+  //     orderByFields: ['total_opif_sum DESC']
+  //   }
+  // },
+  {
+    parentCard: 8,
+    type: FilterType.Producer,
+    name: 'Tipo persona',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 9,
+      options: {
+        fieldCategory: 'nat_juridica',
+        viewMore: false,
+        serieConfig: [{
+          name: 'nat_juridica',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['nat_juridica'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 8,
+    type: FilterType.Producer,
+    name: 'Tipo productor',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 10,
+      options: {
+        fieldCategory: 'tipo_productor',
+        viewMore: false,
+        serieConfig: [{
+          name: 'tipo_productor',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['tipo_productor'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 8,
+    type: FilterType.Producer,
+    name: 'Sexo',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 11,
+      options: {
+        fieldCategory: 'sexo',
+        viewMore: false,
+        serieConfig: [{
+          name: 'sexo',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['sexo'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 5,
+    type: FilterType.Product,
+    name: 'Cadenas por sector',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 12,
+      options: {
+        fieldCategory: 'cadena',
+        viewMore: false,
+        eachRowIsACard: true,
+        serieConfig: [{
+          yField: 'total_opif_sum'
+        }],
+        formatConfig: {// Format data
+          groupByField: 'sector',
+        },
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['sector', 'cadena'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 6,
+    type: FilterType.Product,
+    name: 'Eslabones por cadena',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 13,
+      options: {
+        fieldCategory: 'eslabon',
+        viewMore: false,
+        eachRowIsACard: true,
+        serieConfig: [{
+          yField: 'total_opif_sum'
+        }],
+        formatConfig: {// Format data
+          groupByField: 'cadena',
+        },
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['cadena', 'eslabon'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 7,
+    type: FilterType.Product,
+    name: 'Destinos de crédito por eslabón',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 13,
+      options: {
+        fieldCategory: 'destino',
+        viewMore: false,
+        eachRowIsACard: true,
+        serieConfig: [{
+          yField: 'total_opif_sum'
+        }],
+        formatConfig: {// Format data
+          groupByField: 'eslabon',
+        },
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      where: '1=1',
+      groupByFieldsForStatistics: ['eslabon', 'destino'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC']
+    }
+  },
+]
+
+export const QUERY_SCHEMA: Query[] = [
   /**
-   * WHERE: Will be updated by dynamic filters '1 = 1' works as fallback
+   * WHERE: Will be updated by dynamic filters '1=1' works as fallback
    */
   {
+    type: FilterType.Instrument,
     name: 'Instrumentos',
     cardConfig: {
       type: CardType.Amount,
       id: 1,
+      options: {
+        viewMoreWhen: {
+          field: 'title', // Title card
+          value: 'CRE COLOCACIONES'
+        }
+      }
     },
     query: {
       where: '1=1',
@@ -290,6 +865,7 @@ export const QUERY_SCHEMA = [
     }
   },
   {
+    type: FilterType.Period,
     name: 'Periodo de tiempo',
     cardConfig: {
       type: CardType.Bar,
@@ -297,11 +873,10 @@ export const QUERY_SCHEMA = [
       options: {
         fieldCategory: 'interm',
         serieConfig: [{
-          name: 'intermediario',
+          name: 'interm',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'interm',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -328,6 +903,7 @@ export const QUERY_SCHEMA = [
     }
   },
   {
+    type: FilterType.Territory,
     name: 'Territorio',
     cardConfig: {
       type: CardType.Bar,
@@ -342,11 +918,10 @@ export const QUERY_SCHEMA = [
       options: {
         fieldCategory: 'dpto_cnmbr',
         serieConfig: [{
-          name: 'departamento',
+          name: 'dpto_cnmbr',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'dpto_cnmbr',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -373,6 +948,7 @@ export const QUERY_SCHEMA = [
     }
   },
   {
+    type: FilterType.Intermediary,
     name: 'Tipo intermediario',
     cardConfig: {
       type: CardType.Bar,
@@ -380,11 +956,10 @@ export const QUERY_SCHEMA = [
       options: {
         fieldCategory: 'tipo_interm',
         serieConfig: [{
-          name: 'tipo intermediario',
+          name: 'tipo_interm',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'tipo_interm',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -411,7 +986,8 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    name: 'Producto (Sector)',
+    type: FilterType.Product,
+    name: 'Cadenas por sector',
     cardConfig: {
       type: CardType.Bar,
       id: 5,
@@ -429,7 +1005,6 @@ export const QUERY_SCHEMA = [
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'sector',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -456,7 +1031,8 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    name: 'Producto (Cadena)',
+    type: FilterType.Product,
+    name: 'Eslabones por cadena',
     cardConfig: {
       type: CardType.Bar,
       id: 6,
@@ -477,7 +1053,6 @@ export const QUERY_SCHEMA = [
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'cadena',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -504,7 +1079,8 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    name: 'Producto (Eslabon)',
+    type: FilterType.Product,
+    name: 'Dest. crédito por eslabón',
     cardConfig: {
       type: CardType.Bar,
       id: 7,
@@ -519,7 +1095,6 @@ export const QUERY_SCHEMA = [
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'eslabon',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -546,18 +1121,18 @@ export const QUERY_SCHEMA = [
     }
   },
   {
-    name: 'Característica productor',
+    type: FilterType.Producer,
+    name: 'Características productor',
     cardConfig: {
       type: CardType.Pie,
       id: 8,
       options: {
         fieldCategory: 'tipo_productor',
         serieConfig: [{
-          name: 'tipo productor',
+          name: 'tipo_productor',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          xField: 'tipo_productor',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'

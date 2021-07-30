@@ -1,5 +1,6 @@
 import { ImmutableObject } from 'seamless-immutable';
 import Highcharts from 'highcharts';
+import { FilterType, Query } from '../../config';
 
 Highcharts.setOptions({
     lang: {
@@ -95,10 +96,15 @@ export const BAR_OPTIONS = {
     },
 }
 
+export const MULTISERIE_OPTIONS = {
+    ...BAR_OPTIONS,
+}
+
 export enum CardType {
     Amount = 'AMOUNT',
     Pie = 'PIE',
-    Bar = 'BAR'
+    Bar = 'BAR',
+    Multiserie = 'MULTISERIE'
 }
 
 export interface SerieConfig {
@@ -107,25 +113,42 @@ export interface SerieConfig {
 }
 
 export interface TooltipConfig {
-    xField?: string;
     xFieldLabel?: string;
     customField?: string;
     customFieldLabel?: string;
+}
+
+export interface FormatConfig {
+    groupByField: string;
 }
 
 export interface CardOptions {
     title?: string;
     subtitle?: string;
     viewMore?: boolean;
+    viewMoreWhen?: {
+        field: string;
+        value: string;
+    };
     fullWidth?: boolean;
-    fieldCategory?: string; // Bar
-    serieConfig?: SerieConfig[]; // Bar
-    tooltipConfig?: TooltipConfig; // Bar
+    eachRowIsACard?: boolean;
+    fieldCategory?: string;
+    query?: Query;
+    serieConfig?: SerieConfig[];
+    tooltipConfig?: TooltipConfig;
+    formatConfig?: FormatConfig;
+}
+
+export interface CardFilter {
+    cardId: number;
+    type: FilterType;
+    query: Query;
 }
 
 export interface Card {
     type: CardType;
     data: any;
+    filter?: CardFilter;
     options?: CardOptions;
     handleViewMore?: (card: Card) => void;
 }

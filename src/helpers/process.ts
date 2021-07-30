@@ -1,6 +1,6 @@
 import Highcharts from 'highcharts';
 import { CardOptions } from "../components/Card/config";
-import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, Query } from "../config";
+import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, InitialData, Query } from "../config";
 import { groupBy, SHORT_MONTH_NAMES } from "./utils";
 
 const getDBField = (identifiers: Filter[], value: string) => {
@@ -79,10 +79,10 @@ export const getData = (response: DatasourceResponse) => {
     return response.records.map((r: any) => r.getData());
 }
 
-// Only works for 'Columns' Bar chart
+// Only works for Bar chart
 export const formatDataBar = (options: CardOptions, data: any) => {
     const { fieldCategory, serieConfig, tooltipConfig } = options;
-    const response = { categories: [], series: [], tooltip: {} };
+    const response = { categories: [], series: [], tooltip: {} }
 
     if (fieldCategory && serieConfig && data) {
         const categories = data.map((item: any) => item[fieldCategory]);
@@ -106,9 +106,46 @@ export const formatDataBar = (options: CardOptions, data: any) => {
     }
 }
 
+export const groupDataGraph = (data: any, groupByField: string, yField: string) => {
+    const groupedData = groupBy(data, groupByField);
+    const categories = Object.keys(groupedData).map((key: string) => key);
+    const series = Object.keys(groupedData).map(serie => ({
+        name: serie, data: groupedData[serie].map((item: any) => ({ y: item[yField], custom: item }))
+    }));
+    return { categories, series }
+}
+
+export const formatDataMultiserie = (options: CardOptions, data: any) => {
+    const { fieldCategory, tooltipConfig, serieConfig, formatConfig } = options;
+    const response = { categories: [], series: [], tooltip: {} }
+
+    if (fieldCategory && serieConfig && formatConfig && data) {
+        const { categories, series } = groupDataGraph(data, formatConfig.groupByField, serieConfig[0].yField);
+        // const groupedData = groupBy(data, formatConfig.groupByField);
+        // const categories = Object.keys(groupedData).map((key: string) => key);
+        // const series = Object.keys(groupedData).map(serie => ({
+        //     name: serie, data: groupedData[serie].map((item: any) => ({ y: item[serieConfig[0].yField], custom: item }))
+        // }));
+        const tooltip = {
+            formatter: function () {
+                return `<b>${this.x}</b> <br>
+                ${tooltipConfig.xFieldLabel} ${Highcharts.numberFormat(this.y, 0)} <br>
+                ${tooltipConfig.customFieldLabel} ${Highcharts.numberFormat(this.point.custom[tooltipConfig.customField], 0)}`;
+            }
+        }
+
+        response.categories = categories;
+        response.series = series;
+        response.tooltip = tooltip;
+        return response;
+    } else {
+        return response;
+    }
+}
+
 export const formatDataPie = (options: CardOptions, data: any) => {
     const { fieldCategory, serieConfig, tooltipConfig } = options;
-    const response = { series: [], tooltip: {} };
+    const response = { series: [], tooltip: {} }
 
     if (fieldCategory && serieConfig && data) {
         const series = serieConfig.map(serie => ({
@@ -158,16 +195,18 @@ export const formatFilterStatus = (last: Filter) => {
     }
 }
 
-export const getPeriodLabels = (filter: Filter[]): string[] => {
+export const getPeriodLabels = (filter: Filter[], initialData: InitialData[]): string[] => {
     const periodFilter = filter.filter(
         filter => filter.filterType === FilterType.Period && (filter.value instanceof Array ? filter.value?.length : filter.value)
     );
-    const currentYear = String(new Date().getFullYear()); // TODO: query from datasource
+    const currentYear = initialData?.length ? Math.max.apply(Math, initialData.map((item) => item.anio)) : (new Date().getFullYear() - 1);
     const labels = [currentYear];
     // Get the last two territory filters
     if (periodFilter.length) {
         const lastPeriodFilter = formatFilterStatus(periodFilter[periodFilter.length - 1]);
-        if (lastPeriodFilter) {
+        // Prevent duplicates
+        const valueAlreadyExists = labels.find(label => label == lastPeriodFilter);
+        if (!valueAlreadyExists && lastPeriodFilter) {
             labels.unshift(lastPeriodFilter);
         }
     }

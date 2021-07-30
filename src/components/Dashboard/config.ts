@@ -5,6 +5,9 @@ export const FILTER_PANEL = '.side';
 
 export interface Dashboard {
     selectedCard?: Card;
+    preloader?: boolean;
+    data?: any;
+    getData?: () => void;
     refresh?: () => void;
     handleViewMore?: () => void;
 }

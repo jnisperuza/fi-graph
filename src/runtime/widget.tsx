@@ -18,7 +18,9 @@ import {
   QUERY_SCHEMA,
   DatasourceResponse,
   Query,
-  QueryData
+  QueryData,
+  QUERY_SCHEMA_DASHBOARD,
+  FilterType
 } from '../config';
 
 import FilterStatus from '../components/FilterStatus/FilterStatus';
@@ -41,7 +43,9 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     filterStatus: [],
     queries: [],
     queryData: [],
+    queryDataDashboard: [],
     selectedCard: null,
+    initialData: [],
   };
 
   constructor(props: any) {
@@ -49,13 +53,11 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     this.handleRemoveFilter = this.handleRemoveFilter.bind(this);
     this.handleUIRefresh = this.handleUIRefresh.bind(this);
     this.handleViewMore = this.handleViewMore.bind(this);
-  }
-
-  getOriginDataSource() {
-    return DataSourceManager.getInstance().getDataSource(this.props.useDataSources?.[0]?.dataSourceId)
+    this.buildQueryDataDashboard = this.buildQueryDataDashboard.bind(this);
   }
 
   componentDidMount() {
+    this.getInitialData();
     this.updateFilters();
   }
 
@@ -63,6 +65,10 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     this.updateFilters();
     // Update FilterStatus (badge)
     this.buildFilterStatus();
+  }
+
+  getOriginDataSource() {
+    return DataSourceManager.getInstance().getDataSource(this.props.useDataSources?.[0]?.dataSourceId)
   }
 
   handleRemoveFilter(filter: string) {
@@ -85,8 +91,10 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   }
 
   handleViewMore(card?: ICard) {
-    this.setState({ selectedCard: card });
-    this.setState({ refresh: true });
+    if (!card) {
+      this.setState({ queryDataDashboard: [] });
+    }
+    this.setState({ selectedCard: card, refresh: true });
   }
 
   /**
@@ -95,6 +103,15 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
    */
   static mapExtraStateProps(state: IMState) {
     return { widgetState: state.widgetState };
+  }
+
+  getInitialData() {
+    const ds = this.getOriginDataSource();
+    if (!ds) return;
+    ds.query({ where: '1=1', outFields: ['anio'], returnDistinctValues: true, orderByFields: 'anio DESC' })
+      .then((result: DatasourceResponse) => {
+        this.setState({ initialData: getData(result) });
+      });
   }
 
   updateFilters() {
@@ -113,7 +130,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const formattedFilters = unifyFilters(filters);
     const whereList = formattedFilters.map(item => where(item.filterList)).filter(item => item);
     const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
-      //Unify all where
+      // Unify all where
       querySchema.query.where = whereList.join(' and ').trim();
       return querySchema;
     });
@@ -128,6 +145,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const queryData: QueryData[] = [];
     const { queries } = this.state;
     const ds = this.getOriginDataSource();
+    if (!ds) return;
     const iterate = (e: Query[], item = 0) => {
       try {
         if (e[item] !== undefined) {
@@ -135,10 +153,67 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             queryData.push({
               name: e[item].name,
               cardConfig: e[item].cardConfig,
-              data: getData(result)
+              data: getData(result),
+              query: e[item],
             });
             // Update state
             this.setState({ queryData, refresh: true });
+            // Next item
+            item++;
+            if (item < e.length) {
+              iterate(e, item);
+            } else {
+              // Shutdown preloader and refresh template
+              this.setState({ preloader: false, refresh: true });
+            }
+          });
+        }
+      } catch (error) { }
+    }
+    // Start preloader
+    this.setState({ preloader: true });
+    iterate(queries);
+  }
+
+  buildQueryDataDashboard() {
+    const { filters, selectedCard } = this.state;
+    const queryDataDashboard: QueryData[] = [];
+    if (!selectedCard || !selectedCard?.filter) return;
+    // Select the same filter type
+    const sameFilterType = filters.filter(_filter => _filter.filterType === selectedCard.filter.type);
+    // Set single filter value
+    const formattedFilters = unifyFilters(sameFilterType).map(_filter => {
+      // Only for instruments card
+      if (selectedCard.filter.type === FilterType.Instrument) {
+        const key = Object.keys(_filter.filterList)[0];
+        _filter.filterList[key][0].value = selectedCard.options.title;
+        _filter.filterList[key] = [_filter.filterList[key][0]];
+      }
+      return _filter;
+    });
+    const whereList = formattedFilters.map(item => where(item.filterList)).filter(item => item);
+    const queries = QUERY_SCHEMA_DASHBOARD.filter(
+      querySchema => querySchema.type === selectedCard.filter.type && querySchema.parentCard === selectedCard.filter.cardId
+    ).map(querySchema => {
+      // Set where
+      querySchema.query.where = whereList.join(' and ').trim();
+      return querySchema;
+    });
+    if (!queries.length) return;
+    const ds = this.getOriginDataSource();
+    if (!ds) return;
+    const iterate = (e: Query[], item = 0) => {
+      try {
+        if (e[item] !== undefined) {
+          ds.query(e[item].query).then((result: DatasourceResponse) => {
+            queryDataDashboard.push({
+              name: e[item].name,
+              cardConfig: e[item].cardConfig,
+              data: getData(result),
+              query: e[item],
+            });
+            // Update state
+            this.setState({ queryDataDashboard, refresh: true });
             // Next item
             item++;
             if (item < e.length) {
@@ -197,7 +272,8 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     }
     else if (
       qd.cardConfig.type === CardType.Bar ||
-      qd.cardConfig.type === CardType.Pie
+      qd.cardConfig.type === CardType.Pie ||
+      qd.cardConfig.type === CardType.Multiserie
     ) {
       return this.drawCardGraph(qd);
     }
@@ -214,7 +290,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             value: item.valor_opif_sum
           }}
           handleViewMore={this.handleViewMore}
+          filter={{
+            cardId: qd.cardConfig.id,
+            type: qd.query.type,
+            query: qd.query.query
+          }}
           options={{
+            ...qd.cardConfig.options,
             fullWidth: qd.data.length === position + 1 && qd.data.length % 2 !== 0,
             title: item.subtipo_inst
           }} />
@@ -228,6 +310,11 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
         type={qd.cardConfig.type}
         data={qd.data}
         handleViewMore={this.handleViewMore}
+        filter={{
+          cardId: qd.cardConfig.id,
+          type: qd.query.type,
+          query: qd.query.query
+        }}
         options={{
           ...qd.cardConfig.options,
           fullWidth: true,
@@ -242,6 +329,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
 
     // It should only be run the first time or when redux enters a new filter
     if (!loading && !preloader && !queryData.length) {
+      this.getInitialData();
       this.buildQueryData();
     }
 
@@ -254,7 +342,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
     const { preloader } = this.state;
     const territoryLabels = getTerritoryLabels(this.state.filters);
-    const periodLabels = getPeriodLabels(this.state.filters);
+    const periodLabels = getPeriodLabels(this.state.filters, this.state.initialData);
 
     this.setState({ refresh: false });
     return (
@@ -286,7 +374,14 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
         <main className={`${preloader || this.state.selectedCard ? 'locked' : ''}`}>
           {this.renderCards(loading)}
           {this.state.selectedCard && (
-            <Dashboard selectedCard={this.state.selectedCard} handleViewMore={this.handleViewMore} />
+            <Dashboard
+              selectedCard={this.state.selectedCard}
+              preloader={preloader}
+              data={this.state.queryDataDashboard}
+              handleViewMore={this.handleViewMore}
+              refresh={this.handleUIRefresh}
+              getData={this.buildQueryDataDashboard}
+            />
           )}
         </main>
       </div>

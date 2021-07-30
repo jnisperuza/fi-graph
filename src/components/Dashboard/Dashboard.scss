@@ -1,3 +1,5 @@
+@import '../../styles/Mixins.scss';
+
 .Dashboard {
   display: none;
   grid-template-columns: 1fr;
@@ -16,22 +18,114 @@
     display: grid;
   }
 
+  div.wrapper-preloader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background-color: rgba(0, 0, 0, 0.1);
+    z-index: 30;
+
+    div.preloader {
+      @include preloader();
+    }
+  }
+
   div.header {
-    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 20px;
     box-sizing: border-box;
+    border-bottom: 1px solid var(--org-header-bg);
+
+    span {
+      color: var(--dark);
+      font-weight: 600;
+      font-size: 16px;
+    }
   }
 
   div.content {
-    padding: 10px;
+    display: block;
+    padding: 10px 20px;
     box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    .Card {
+      display: inline-block;
+      width: calc(33.333333% - 10px);
+      height: 300px;
+      min-width: 400px;
+
+      .header {
+        padding: 0;
+        height: 50px;
+        grid-template-columns: 1fr;
+
+        .description {
+          display: none;
+        }
+      }
+
+      .content {
+        height: calc(100% - 50px);
+      }
+    }
+
+    div.empty-data {
+      position: relative;
+      background-color: var(--org-header-bg);
+      width: calc(100% - 20px);
+      max-width: 200px;
+      margin: 10px auto;
+      padding: 10px;
+      border: 1px dashed var(--org-header-color);
+      border-radius: 3px;
+      transform: translateY(50%);
+      box-sizing: border-box;
+      @include no-select();
+
+      span {
+        display: block;
+        font-size: 13px;
+        color: var(--org-header-color);
+        text-align: center;
+      }
+    }
   }
 
   div.actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    border-top: 1px solid var(--org-header-bg);
+
     button.close {
-      width: 200px;
-      height: 45px;
-      color: var(--white);
       background-color: var(--primary);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 500;
+      outline: none !important;
+      opacity: 1 !important;
+      border-radius: 8px;
+      padding: 10px 20px;
+
+      &:hover {
+        color: var(--white) !important;
+      }
+
+      span {
+        margin-left: 5px;
+      }
     }
   }
 }
