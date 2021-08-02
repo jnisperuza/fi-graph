@@ -1,31 +1,64 @@
 import { ImmutableObject } from 'seamless-immutable';
 import Highcharts from 'highcharts';
+import HC_exporting from 'highcharts/modules/exporting';
 import { FilterType, Query } from '../../config';
+
+// init the module
+HC_exporting(Highcharts)
 
 Highcharts.setOptions({
     lang: {
         resetZoom: '⟲',
+        resetZoomTitle: 'Zoom normal',
         decimalPoint: ',',
-        thousandsSep: '.'
+        thousandsSep: '.',
+        viewFullscreen: 'Ver pantalla completa',
+        exitFullscreen: 'Salir pantalla completa',
+        printChart: 'Imprimir gráfica',
+        downloadCSV: 'Descargar CSV',
+        downloadJPEG: 'Descargar JPEG',
+        downloadPDF: 'Descargar PDF',
+        downloadPNG: 'Descargar PNG',
+        downloadSVG: 'Descargar SVG',
+        downloadXLS: 'Descargar XLS',
+        months: [
+            'Enero', 'Febrero', 'Marzo', 'Abril',
+            'Mayo', 'Junio', 'Julio', 'Agosto',
+            'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ],
+        shortMonths: [
+            'Ene', 'Feb', 'Mar', 'Abr',
+            'May', 'Jun', 'Jul', 'Ago',
+            'Sep', 'Oct', 'Nov', 'Dic'
+        ],
+        weekdays: [
+            'Domingo', 'Lunes', 'Martes', 'Miércoles',
+            'Jueves', 'Viernes', 'Sábado'
+        ],
+        shortWeekdays: [
+            'Dom', 'Lun', 'Mar', 'Mié',
+            'Jue', 'Vie', 'Sáb'
+        ],
     },
     plotOptions: {
         series: {
             animation: false
         }
-    }
+    },
 });
 
 const COMMON_GRAPH_OPTIONS = {
     containerProps: {
         style: {
             width: '100%',
-            height: '100%'
+            height: '100%',
+            boxSizing: 'border-box'
         }
     },
     chart: {
         zoomType: 'xy',
         borderRadius: 4,
-        backgroundColor: 'rgba(250, 250, 250, 0.5)',
+        backgroundColor: 'white',
         resetZoomButton: {
             theme: {
                 style: {
@@ -45,7 +78,7 @@ const COMMON_GRAPH_OPTIONS = {
         enabled: false
     },
     title: false,
-    subtitle: false
+    subtitle: false,
 };
 
 export const PIE_OPTIONS = {
@@ -63,7 +96,9 @@ export const PIE_OPTIONS = {
             cursor: 'pointer',
             dataLabels: {
                 enabled: true,
-                format: '{point.name}'
+                formatter: function () {
+                    return `${this.point.name}: ${Highcharts.numberFormat(this.percentage, 2)}%`;
+                }
             },
         }
     }
@@ -98,6 +133,18 @@ export const BAR_OPTIONS = {
 
 export const MULTISERIE_OPTIONS = {
     ...BAR_OPTIONS,
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'top',
+        x: 0,
+        y: 90,
+        floating: true,
+        borderWidth: 1,
+        backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
+        shadow: true
+    },
 }
 
 export enum CardType {
@@ -113,6 +160,7 @@ export interface SerieConfig {
 }
 
 export interface TooltipConfig {
+    titleField?: string;
     xFieldLabel?: string;
     customField?: string;
     customFieldLabel?: string;
@@ -133,6 +181,7 @@ export interface CardOptions {
     fullWidth?: boolean;
     eachRowIsACard?: boolean;
     fieldCategory?: string;
+    fieldSerie?: string;
     query?: Query;
     serieConfig?: SerieConfig[];
     tooltipConfig?: TooltipConfig;

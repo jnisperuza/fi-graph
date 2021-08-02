@@ -2,12 +2,10 @@ import React, { useEffect } from 'react';
 import { DOWNLOAD_BUTTONS, FILTER_PANEL, Dashboard } from './config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
+import Card from '../Card/Card';
+import { groupBy } from '../../helpers/utils';
 
 import './Dashboard.scss';
-import { Card as ICard } from '../Card/config';
-import Card from '../Card/Card';
-import { groupDataGraph } from '../../helpers/process';
-import { groupBy } from '../../helpers/utils';
 
 function Dashboard(props: Dashboard) {
     const {

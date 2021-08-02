@@ -26,16 +26,17 @@ import {
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
 import { CardType, Card as ICard } from '../components/Card/config';
-import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus } from '../helpers/process';
+import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus, formatPredefinedWhere, cleanWhere } from '../helpers/process';
 import Dashboard from '../components/Dashboard/Dashboard';
 
 import "./widget.scss";
+import { stringFormat } from '../helpers/utils';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
   [x: string]: any;
   state = {
-    query: null,
+    firstLoad: false,
     refresh: false,
     preloader: false,
     wrapperFilterStatusRef: React.createRef<HTMLDivElement>(),
@@ -45,7 +46,8 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     queryData: [],
     queryDataDashboard: [],
     selectedCard: null,
-    initialData: [],
+    periodData: [],
+    previousYear: null,
   };
 
   constructor(props: any) {
@@ -57,12 +59,11 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   }
 
   componentDidMount() {
-    this.getInitialData();
-    this.updateFilters();
   }
 
   componentWillReceiveProps() {
     this.updateFilters();
+    this.buildQueryData();
     // Update FilterStatus (badge)
     this.buildFilterStatus();
   }
@@ -105,13 +106,25 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     return { widgetState: state.widgetState };
   }
 
-  getInitialData() {
+  getPeriodData() {
     const ds = this.getOriginDataSource();
     if (!ds) return;
-    ds.query({ where: '1=1', outFields: ['anio'], returnDistinctValues: true, orderByFields: 'anio DESC' })
-      .then((result: DatasourceResponse) => {
-        this.setState({ initialData: getData(result) });
-      });
+    return new Promise((resolve) => {
+      // Get the most recent periods
+      ds.query({ where: '1=1', outFields: ['anio, mes'], returnDistinctValues: true, returnGeometry: false, orderByFields: 'anio DESC, mes DESC' })
+        .then((result: DatasourceResponse) => {
+          const periodData = getData(result);
+          this.setState({ periodData });
+
+          if (periodData.length) {
+            const mostRecentYear = Math.max.apply(Math, periodData.map((item) => item.anio));
+            const previousYear = { year: mostRecentYear - 1 };
+            this.setState({ previousYear });
+
+            resolve({ periodData, previousYear });
+          }
+        });
+    });
   }
 
   updateFilters() {
@@ -130,9 +143,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const formattedFilters = unifyFilters(filters);
     const whereList = formattedFilters.map(item => where(item.filterList)).filter(item => item);
     const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
+      // Predefined where from config
+      const predefinedWhere = formatPredefinedWhere(querySchema, this.state);
+      const cleanedWhere = cleanWhere(whereList.join(' and ').trim(), querySchema.whereFields);
       // Unify all where
-      querySchema.query.where = whereList.join(' and ').trim();
-      return querySchema;
+      const _querySchema = JSON.parse(JSON.stringify(querySchema));
+      _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      return _querySchema;
     });
     const queriesAppliedRules = applyRules(queries, filters);
     // Update queries state
@@ -157,7 +174,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
               query: e[item],
             });
             // Update state
-            this.setState({ queryData, refresh: true });
+            this.setState({ queryData });
             // Next item
             item++;
             if (item < e.length) {
@@ -170,9 +187,12 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
         }
       } catch (error) { }
     }
-    // Start preloader
-    this.setState({ preloader: true });
-    iterate(queries);
+
+    if (queries.length) {
+      // Start preloader
+      this.setState({ preloader: true });
+      iterate(queries);
+    }
   }
 
   buildQueryDataDashboard() {
@@ -195,9 +215,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const queries = QUERY_SCHEMA_DASHBOARD.filter(
       querySchema => querySchema.type === selectedCard.filter.type && querySchema.parentCard === selectedCard.filter.cardId
     ).map(querySchema => {
+      // Predefined where from config
+      const predefinedWhere = formatPredefinedWhere(querySchema, this.state);
+      const cleanedWhere = cleanWhere(whereList.join(' and ').trim(), querySchema.whereFields);
       // Set where
-      querySchema.query.where = whereList.join(' and ').trim();
-      return querySchema;
+      const _querySchema = JSON.parse(JSON.stringify(querySchema));
+      _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      return _querySchema;
     });
     if (!queries.length) return;
     const ds = this.getOriginDataSource();
@@ -325,12 +349,15 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
 
   renderCards(loading: boolean) {
     // Generate data for each filter type into state
-    const { queryData, preloader } = this.state;
+    const { queryData } = this.state;
 
     // It should only be run the first time or when redux enters a new filter
-    if (!loading && !preloader && !queryData.length) {
-      this.getInitialData();
-      this.buildQueryData();
+    if (!loading && !this.state.firstLoad) {
+      this.getPeriodData().then(() => {
+        this.updateFilters();
+        this.buildQueryData();
+        this.setState({ firstLoad: true });
+      });
     }
 
     return queryData.map(
@@ -342,12 +369,12 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const loading = info.status === 'UNLOADED' || info.status === 'LOADING';
     const { preloader } = this.state;
     const territoryLabels = getTerritoryLabels(this.state.filters);
-    const periodLabels = getPeriodLabels(this.state.filters, this.state.initialData);
+    const periodLabels = getPeriodLabels(this.state.periodData);
 
     this.setState({ refresh: false });
     return (
       <div className="fi-graph" style={this.getInlineStyle()}>
-        {preloader && (
+        {(preloader || loading) && (
           <div className="wrapper-preloader">
             <div className="preloader" />
           </div>

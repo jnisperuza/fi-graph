@@ -1,7 +1,7 @@
 import Highcharts from 'highcharts';
 import { CardOptions } from "../components/Card/config";
-import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, InitialData, Query } from "../config";
-import { groupBy, SHORT_MONTH_NAMES } from "./utils";
+import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, LOGICAL_OPERATORS, PeriodData, Query, State } from "../config";
+import { groupBy, SHORT_MONTH_NAMES, stringFormat } from "./utils";
 
 const getDBField = (identifiers: Filter[], value: string) => {
     const found = identifiers.find(
@@ -62,13 +62,44 @@ export const where = (filterList: Filter[]) => {
             filterList[key].forEach((filter: Filter, _index: number) => {
                 if (filter.value) {
                     const value = filter.type === 'number' ? filter.value : `'${filter.value}'`;
-                    where += `${filter.field} = ${value} ${_index + 1 !== filterList[key].length ? 'or' :
+                    where += `${filter.field}=${value} ${_index + 1 !== filterList[key].length ? 'or' :
                         (index + 1 !== Object.keys(filterList).length ? 'and' : '')} `;
                 }
             });
         } else {
             // fallback action
             where = '1=1';
+        }
+    });
+    return where.trim();
+}
+
+export const cleanWhere = (where: string, whereFields: string[]): string => {
+    if (!whereFields?.length) return where;
+    const broken = where.split(/\b(?:or|and)\b/gi);
+    // Compare where fields
+    broken.forEach((item: string) => {
+        whereFields.forEach((wf: string) => {
+            if (item.includes(wf)) {
+                LOGICAL_OPERATORS.forEach((operator: string) => {
+                    where = where.replace(`${item.trim()} ${operator}`, '');
+                    where = where.trim();
+                });
+                where = where.replace(item.trim(), '');
+            }
+        });
+    });
+    // Clean the end of the text
+    LOGICAL_OPERATORS.forEach(operator => {
+        const finalChunk = where.substring(where.length - 6, where.length);
+        if (finalChunk.includes(` ${operator} `)) {
+            where = where.replace(` ${operator} `, '');
+        }
+        else if (finalChunk.includes(` ${operator}`)) {
+            where = where.replace(` ${operator}`, '');
+        }
+        else if (finalChunk.includes(`${operator} `)) {
+            where = where.replace(`${operator} `, '');
         }
     });
     return where.trim();
@@ -91,9 +122,14 @@ export const formatDataBar = (options: CardOptions, data: any) => {
         }));
         const tooltip = {
             formatter: function () {
-                return `<b>${this.x}</b> <br>
-                ${tooltipConfig.xFieldLabel} ${Highcharts.numberFormat(this.y, 0)} <br>
-                ${tooltipConfig.customFieldLabel} ${Highcharts.numberFormat(this.point.custom[tooltipConfig.customField], 0)}`;
+                const { xFieldLabel, customFieldLabel, customField } = tooltipConfig;
+                if (xFieldLabel && customFieldLabel && customField) {
+                    return `<b>${this.x}</b> <br>
+                    ${xFieldLabel} ${Highcharts.numberFormat(this.y, 0)} <br>
+                    ${customFieldLabel} ${Highcharts.numberFormat(this.point.custom[customField], 0)}`;
+                } else {
+                    return `<b>${this.x}:</b> ${Highcharts.numberFormat(this.y, 0)}`;
+                }
             }
         }
 
@@ -106,31 +142,33 @@ export const formatDataBar = (options: CardOptions, data: any) => {
     }
 }
 
-export const groupDataGraph = (data: any, groupByField: string, yField: string) => {
-    const groupedData = groupBy(data, groupByField);
-    const categories = Object.keys(groupedData).map((key: string) => key);
-    const series = Object.keys(groupedData).map(serie => ({
-        name: serie, data: groupedData[serie].map((item: any) => ({ y: item[yField], custom: item }))
+export const groupDataGraph = (data: any, fieldCategory: string, fieldSerie: string, yField: string) => {
+    const groupCategory = groupBy(data, fieldCategory);
+    const categories = Object.keys(groupCategory).map((key: string) => key);
+
+    const groupSerie = groupBy(data, fieldSerie);
+    const series = Object.keys(groupSerie).map(serie => ({
+        name: serie, data: groupSerie[serie].map((item: any) => ({ y: item[yField], custom: item }))
     }));
     return { categories, series }
 }
 
 export const formatDataMultiserie = (options: CardOptions, data: any) => {
-    const { fieldCategory, tooltipConfig, serieConfig, formatConfig } = options;
+    const { fieldCategory, fieldSerie, tooltipConfig, serieConfig } = options;
     const response = { categories: [], series: [], tooltip: {} }
 
-    if (fieldCategory && serieConfig && formatConfig && data) {
-        const { categories, series } = groupDataGraph(data, formatConfig.groupByField, serieConfig[0].yField);
-        // const groupedData = groupBy(data, formatConfig.groupByField);
-        // const categories = Object.keys(groupedData).map((key: string) => key);
-        // const series = Object.keys(groupedData).map(serie => ({
-        //     name: serie, data: groupedData[serie].map((item: any) => ({ y: item[serieConfig[0].yField], custom: item }))
-        // }));
+    if (fieldCategory && fieldSerie && serieConfig && data) {
+        const { categories, series } = groupDataGraph(data, fieldCategory, fieldSerie, serieConfig[0].yField);
         const tooltip = {
             formatter: function () {
-                return `<b>${this.x}</b> <br>
-                ${tooltipConfig.xFieldLabel} ${Highcharts.numberFormat(this.y, 0)} <br>
-                ${tooltipConfig.customFieldLabel} ${Highcharts.numberFormat(this.point.custom[tooltipConfig.customField], 0)}`;
+                const { titleField, xFieldLabel, customFieldLabel, customField } = tooltipConfig;
+                if (titleField && xFieldLabel && customFieldLabel && customField) {
+                    return `<b>${this.point.custom[titleField]}</b> <br>
+                    ${xFieldLabel} ${Highcharts.numberFormat(this.y, 0)} <br>
+                    ${customFieldLabel} ${Highcharts.numberFormat(this.point.custom[customField], 0)}`;
+                } else {
+                    return `<b>${this.x}:</b> ${Highcharts.numberFormat(this.y, 0)}`;
+                }
             }
         }
 
@@ -153,9 +191,14 @@ export const formatDataPie = (options: CardOptions, data: any) => {
         }));
         const tooltip = {
             formatter: function () {
-                return `<b>${this.point.name}</b> <br>
-                ${tooltipConfig.xFieldLabel} ${Highcharts.numberFormat(this.point.y, 0)} <br>
-                ${tooltipConfig.customFieldLabel} ${Highcharts.numberFormat(this.point.custom[tooltipConfig.customField], 0)}`;
+                const { xFieldLabel, customFieldLabel, customField } = tooltipConfig;
+                if (xFieldLabel && customFieldLabel && customField) {
+                    return `<b>${this.point.name}:</b> ${Highcharts.numberFormat(this.percentage, 2)}% <br>
+                    ${xFieldLabel} ${Highcharts.numberFormat(this.point.y, 0)} <br>
+                    ${customFieldLabel} ${Highcharts.numberFormat(this.point.custom[customField], 0)}`;
+                } else {
+                    return `<b>${this.point.name}:</b> ${Highcharts.numberFormat(this.point.y, 0)}`;
+                }
             }
         }
 
@@ -195,29 +238,49 @@ export const formatFilterStatus = (last: Filter) => {
     }
 }
 
-export const getPeriodLabels = (filter: Filter[], initialData: InitialData[]): string[] => {
-    const periodFilter = filter.filter(
-        filter => filter.filterType === FilterType.Period && (filter.value instanceof Array ? filter.value?.length : filter.value)
-    );
-    const currentYear = initialData?.length ? Math.max.apply(Math, initialData.map((item) => item.anio)) : (new Date().getFullYear() - 1);
-    const labels = [currentYear];
-    // Get the last two territory filters
-    if (periodFilter.length) {
-        const lastPeriodFilter = formatFilterStatus(periodFilter[periodFilter.length - 1]);
-        // Prevent duplicates
-        const valueAlreadyExists = labels.find(label => label == lastPeriodFilter);
-        if (!valueAlreadyExists && lastPeriodFilter) {
-            labels.unshift(lastPeriodFilter);
-        }
-    }
-    if (periodFilter.length > 1) {
-        const penultimatePeriodFilter = formatFilterStatus(periodFilter[periodFilter.length - 2]);
-        if (penultimatePeriodFilter) {
-            labels.unshift(penultimatePeriodFilter);
-            // Remove the first item, this array allow two items
-            labels.pop();
-        }
-    }
+export const formatPredefinedWhere = (querySchema: Query, state: State) => {
+    if (!querySchema.queryVars?.length) return '';
+    let data = {};
+    querySchema.queryVars.forEach((queryVar: string) => {
+        let tempData: any;
+        const stateVarLevels = queryVar.split('.');
+
+        stateVarLevels.forEach((stateVar: string, index: number) => {
+            const itemIndex = Number(stateVar);
+            if (index === 0) {
+                tempData = state[stateVar];
+            } else {
+                if (itemIndex !== NaN && tempData instanceof Array) {
+                    const value = tempData[itemIndex];
+                    if (value) {
+                        tempData = value;
+                    }
+                } else {
+                    const value = tempData[stateVar];
+                    if (value) {
+                        tempData = value;
+                    }
+                }
+            }
+            if (tempData && !(tempData instanceof Array)) {
+                if (tempData) {
+                    data = { ...data, ...tempData };
+                }
+            }
+
+        });
+    });
+    return stringFormat(querySchema.query.where, data) || '';
+}
+
+export const getPeriodLabels = (periodData: PeriodData[]): string[] => {
+    if (!periodData.length) return [];
+    const mostRecentYear = Math.max.apply(Math, periodData.map((item) => item.anio));
+    const mostRecentData = periodData.filter((item) => item.anio === mostRecentYear);
+    // Descendent order (max -> min)
+    const first = mostRecentData[0];
+    const last = mostRecentData[mostRecentData.length - 1];
+    const labels = [`${first.anio}`, `${SHORT_MONTH_NAMES[last.mes]} - ${SHORT_MONTH_NAMES[first.mes]}`];
     return labels;
 }
 
@@ -259,17 +322,23 @@ export const applyRules = (queries: Query[], filters: Filter[]): Query[] => {
     }
     const toRemove = [];
     const withRuleHide = queries.filter(query => query.cardConfig?.hide);
-    withRuleHide.forEach(query => {
-        query.cardConfig.hide.forEach((rule: Hide) => {
-            const found = filters.find(filter => filter[rule.field] === rule.value);
-            if (found) {
-                const alreadyExists = toRemove.find(_query => JSON.stringify(_query) === JSON.stringify(query));
-                if (!alreadyExists) {
-                    toRemove.push(query);
+
+    if (withRuleHide?.length) {
+        withRuleHide.forEach(query => {
+            query.cardConfig.hide.forEach((rule: Hide) => {
+                const found = filters.find(
+                    filter => filter[rule.field] === rule.value && (filter.value instanceof Array ? filter.value?.length : filter.value)
+                );
+                if (found) {
+                    const alreadyExists = toRemove.find(_query => JSON.stringify(_query) === JSON.stringify(query));
+                    if (!alreadyExists) {
+                        toRemove.push(query);
+                    }
                 }
-            }
+            });
         });
-    });
+    }
+
     // If it does not find any queries to remove, the deduplication is applied directly to the array 'queries'
     if (!toRemove.length) {
         // It is validated if there are elements with repeated configuration Id, to leave the first one

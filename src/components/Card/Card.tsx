@@ -7,6 +7,7 @@ import { CardType, Card, PIE_OPTIONS, BAR_OPTIONS, MULTISERIE_OPTIONS } from './
 import { currencyFormat, numberFormat } from '../../helpers/utils';
 import { formatDataBar, formatDataMultiserie, formatDataPie } from '../../helpers/process';
 
+
 import './Card.scss';
 
 function Card(props: Card) {
@@ -23,8 +24,8 @@ function Card(props: Card) {
     const handleResize = () => {
         const { width } = wrapperRef?.current && wrapperRef.current.getBoundingClientRect();
         Highcharts.charts.forEach((chart) => {
-            if (chart) {
-                chart.setSize(width - 20);
+            if (chart && width > 200 && chart.fullscreen.isOpen === false) {
+                chart.setSize(width - 15);
             }
         });
     }
@@ -81,15 +82,18 @@ function Card(props: Card) {
         return (
             <div className="Card bar" ref={wrapperRef}>
                 <div className="header">
-                    <h1 title={options?.title}>{options?.title}</h1>
-                    <div className="description">
-                        {options?.viewMore !== false && (
+                    <div className="wrapper-title">
+                        <h1 title={options?.title}>{options?.title}</h1>
+                        <h2 title={options?.subtitle}>{options?.subtitle}</h2>
+                    </div>
+                    {options?.viewMore !== false && (
+                        <div className="description">
                             <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                                 <FontAwesomeIcon icon={faSearch} />
                                 <span>Ver más</span>
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
                 <div className="content">
                     <>
@@ -121,15 +125,18 @@ function Card(props: Card) {
         return (
             <div className="Card pie" ref={wrapperRef}>
                 <div className="header">
-                    <h1 title={options?.title}>{options?.title}</h1>
-                    <div className="description">
-                        {options.viewMore !== false && (
+                    <div className="wrapper-title">
+                        <h1 title={options?.title}>{options?.title}</h1>
+                        <h2 title={options?.subtitle}>{options?.subtitle}</h2>
+                    </div>
+                    {options.viewMore !== false && (
+                        <div className="description">
                             <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                                 <FontAwesomeIcon icon={faSearch} />
                                 <span>Ver más</span>
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
                 <div className="content">
                     <>
@@ -153,9 +160,9 @@ function Card(props: Card) {
     const renderMultiserieType = () => {
         const { categories, series, tooltip } = formatDataMultiserie(options, data);
         const ChartOptions = {
-            ...BAR_OPTIONS,
+            ...MULTISERIE_OPTIONS,
             xAxis: {
-                ...BAR_OPTIONS.xAxis,
+                ...MULTISERIE_OPTIONS.xAxis,
                 categories
             },
             series: series,
@@ -165,15 +172,18 @@ function Card(props: Card) {
         return (
             <div className="Card multiserie" ref={wrapperRef}>
                 <div className="header">
-                    <h1 title={options?.title}>{options?.title}</h1>
-                    <div className="description">
-                        {options.viewMore !== false && (
+                    <div className="wrapper-title">
+                        <h1 title={options?.title}>{options?.title}</h1>
+                        <h2 title={options?.subtitle}>{options?.subtitle}</h2>
+                    </div>
+                    {options.viewMore !== false && (
+                        <div className="description">
                             <button className="view-more" onClick={() => handleViewMoreCard(props)}>
                                 <FontAwesomeIcon icon={faSearch} />
                                 <span>Ver más</span>
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
                 <div className="content">
                     <>

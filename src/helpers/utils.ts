@@ -55,3 +55,18 @@ export const SHORT_MONTH_NAMES = {
     11: 'Nov',
     12: 'Dic'
 }
+
+export const stringFormat = (
+    template: string,
+    data: { [key: string]: string }
+): string => {
+    if (template && data instanceof Object && Object.keys(data).length) {
+        for (const prop in data) {
+            if (Object.prototype.hasOwnProperty.call(data, prop)) {
+                const regexp = new RegExp('\\{' + prop + '\\}', 'gi');
+                template = template.replace(regexp, data[prop]);
+            }
+        }
+        return template;
+    }
+}

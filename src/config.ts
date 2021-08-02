@@ -1,11 +1,11 @@
 import { ImmutableObject } from 'seamless-immutable';
 // @ts-ignore
-import { React, FeatureLayerQueryParams } from 'jimu-core';
+import { React } from 'jimu-core';
 import { Card, CardOptions, CardType } from './components/Card/config';
 
 export interface State {
-  query: FeatureLayerQueryParams;
   wrapperFilterStatusRef: React.RefObject<HTMLDivElement>;
+  firstLoad: boolean;
   refresh: boolean;
   preloader: boolean;
   filters: Filter[];
@@ -14,7 +14,8 @@ export interface State {
   queryData: QueryData[];
   queryDataDashboard: QueryData[];
   selectedCard: Card;
-  initialData: InitialData[];
+  periodData: PeriodData[];
+  previousYear: PeriodData;
 }
 
 export type IMWidgetState = ImmutableObject<State>;
@@ -72,11 +73,15 @@ export interface Query {
   type: FilterType;
   name: string;
   cardConfig: CardConfig;
+  queryVars?: string[];
+  whereFields?: string[];
   query: any;
 }
 
-export interface InitialData {
+export interface PeriodData {
+  // Names from database
   anio: number;
+  mes?: number;
 }
 
 export interface QueryData {
@@ -123,6 +128,7 @@ export const INTL = {
   code: 'es-CO',
   currency: 'COP'
 };
+export const LOGICAL_OPERATORS = ['or', 'and', '>=', '<=', '>', '<'];
 
 export const DEFAULT_FILTER = [
   {
@@ -294,7 +300,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['categ_rur'],
       outStatistics: [
         {
@@ -333,7 +339,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['pdet'],
       outStatistics: [
         {
@@ -372,7 +378,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['zomac'],
       outStatistics: [
         {
@@ -411,7 +417,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['mzeii'],
       outStatistics: [
         {
@@ -450,7 +456,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['zrc'],
       outStatistics: [
         {
@@ -489,7 +495,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['mfront'],
       outStatistics: [
         {
@@ -528,7 +534,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['tipo_interm'],
       outStatistics: [
         {
@@ -567,7 +573,6 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   //     }
   //   },
   //   query: {
-  //     where: '1=1',
   //     groupByFieldsForStatistics: ['coloc_oficinas'],
   //     outStatistics: [
   //       {
@@ -606,7 +611,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['nat_juridica'],
       outStatistics: [
         {
@@ -645,7 +650,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['tipo_productor'],
       outStatistics: [
         {
@@ -684,7 +689,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['sexo'],
       outStatistics: [
         {
@@ -726,7 +731,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['sector', 'cadena'],
       outStatistics: [
         {
@@ -768,7 +773,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['cadena', 'eslabon'],
       outStatistics: [
         {
@@ -810,7 +815,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['eslabon', 'destino'],
       outStatistics: [
         {
@@ -847,7 +852,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['subtipo_inst'],
       outStatistics: [
         {
@@ -868,24 +873,34 @@ export const QUERY_SCHEMA: Query[] = [
     type: FilterType.Period,
     name: 'Periodo de tiempo',
     cardConfig: {
-      type: CardType.Bar,
+      type: CardType.Multiserie,
       id: 2,
       options: {
-        fieldCategory: 'interm',
+        subtitle: 'Nro. de operaciones',
+        viewMore: false,
+        fieldCategory: 'anio',
+        fieldSerie: 'tipo_cartera',
         serieConfig: [{
-          name: 'interm',
+          name: 'tipo_cartera',
           yField: 'total_opif_sum'
         }],
+        // formatConfig: {// Format data
+        //   groupByField: 'anio',
+        // },
         tooltipConfig: {
+          titleField: 'tipo_cartera',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
         }
       }
     },
+    whereFields: ['subtipo_inst', 'anio'], // For predefined fields
+    queryVars: ['periodData.0', 'previousYear'], // From state
     query: {
-      where: '1=1',
-      groupByFieldsForStatistics: ['interm'],
+      where: `subtipo_inst='CRE COLOCACIONES' and anio={anio} or anio={year}`,
+      returnGeometry: false,
+      groupByFieldsForStatistics: ['anio', 'tipo_cartera'],
       outStatistics: [
         {
           statisticType: 'sum',
@@ -898,8 +913,7 @@ export const QUERY_SCHEMA: Query[] = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC'],
-      pageSize: 5
+      orderByFields: ['total_opif_sum DESC']
     }
   },
   {
@@ -929,7 +943,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['dpto_cnmbr'],
       outStatistics: [
         {
@@ -967,7 +981,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['tipo_interm'],
       outStatistics: [
         {
@@ -1012,7 +1026,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['sector'],
       outStatistics: [
         {
@@ -1060,7 +1074,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['cadena'],
       outStatistics: [
         {
@@ -1102,7 +1116,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['eslabon'],
       outStatistics: [
         {
@@ -1140,7 +1154,7 @@ export const QUERY_SCHEMA: Query[] = [
       }
     },
     query: {
-      where: '1=1',
+      returnGeometry: false,
       groupByFieldsForStatistics: ['tipo_productor'],
       outStatistics: [
         {
