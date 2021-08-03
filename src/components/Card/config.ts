@@ -40,6 +40,16 @@ Highcharts.setOptions({
             'Jue', 'Vie', 'Sáb'
         ],
     },
+    colors: [
+        '#b9b611',
+        '#008a7a',
+        '#38dae5',
+        '#76b91a',
+        '#4c9929',
+        '#a3de00',
+        '#1d5630',
+        '#67ba58'
+    ],
     plotOptions: {
         series: {
             animation: false

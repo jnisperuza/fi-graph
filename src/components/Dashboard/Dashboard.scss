@@ -64,6 +64,11 @@
       height: 300px;
       min-width: 400px;
 
+      &.full-width {
+        width: calc(100% - 10px);
+        height: 500px;
+      }
+
       .header {
         padding: 0;
         height: 50px;

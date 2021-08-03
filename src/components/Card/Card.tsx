@@ -69,7 +69,7 @@ function Card(props: Card) {
     );
 
     const renderAmountRowType = () => (
-        <div className="Card amount-row" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+        <div className={`Card amount-row ${options?.fullWidth ? 'full-width' : ''}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
             <div className="header">
                 <div className="wrapper-title">
                     <h1 title={options?.title}>{options?.title}</h1>
@@ -114,7 +114,7 @@ function Card(props: Card) {
             tooltip
         }
         return (
-            <div className="Card bar" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+            <div className={`Card bar ${options?.fullWidth ? 'full-width' : ''}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>
@@ -157,7 +157,7 @@ function Card(props: Card) {
         }
 
         return (
-            <div className="Card pie" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+            <div className={`Card pie ${options?.fullWidth ? 'full-width' : ''}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>
@@ -204,7 +204,7 @@ function Card(props: Card) {
         }
 
         return (
-            <div className="Card multiserie" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+            <div className={`Card multiserie ${options?.fullWidth ? 'full-width' : ''}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>

@@ -548,15 +548,16 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 4,
     type: FilterType.Intermediary,
-    name: 'Tipo de intermediario',
+    name: 'Intermediario',
     cardConfig: {
       type: CardType.Bar,
       id: 7,
       options: {
-        fieldCategory: 'tipo_interm',
+        fieldCategory: 'interm',
         viewMore: false,
+        fullWidth: true,
         serieConfig: [{
-          name: 'tipo_interm',
+          name: 'interm',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
@@ -568,7 +569,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     },
     query: {
       returnGeometry: false,
-      groupByFieldsForStatistics: ['tipo_interm'],
+      groupByFieldsForStatistics: ['interm'],
       outStatistics: [
         {
           statisticType: 'sum',
@@ -581,54 +582,17 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC']
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
     }
   },
-  // {
-  //   parentCard: 4,
-  //   type: FilterType.Intermediary,
-  //   name: 'Número oficinas',
-  //   cardConfig: {
-  //     type: CardType.Bar,
-  //     id: 8,
-  //     options: {
-  //       fieldCategory: 'coloc_oficinas',
-  //       viewMore: false,
-  //       serieConfig: [{
-  //         name: 'coloc_oficinas',
-  //         yField: 'total_opif_sum'
-  //       }],
-  //       tooltipConfig: {
-  //         xFieldLabel: 'Nro. operaciones:',
-  //         customField: 'valor_opif_sum',
-  //         customFieldLabel: 'Valor: $'
-  //       }
-  //     }
-  //   },
-  //   query: {
-  //     groupByFieldsForStatistics: ['coloc_oficinas'],
-  //     outStatistics: [
-  //       {
-  //         statisticType: 'sum',
-  //         onStatisticField: 'total_opif',
-  //         outStatisticFieldName: 'total_opif_sum'
-  //       },
-  //       {
-  //         statisticType: 'sum',
-  //         onStatisticField: 'valor_opif',
-  //         outStatisticFieldName: 'valor_opif_sum'
-  //       }
-  //     ],
-  //     orderByFields: ['total_opif_sum DESC']
-  //   }
-  // },
   {
     parentCard: 8,
     type: FilterType.Producer,
     name: 'Tipo persona',
     cardConfig: {
       type: CardType.Bar,
-      id: 9,
+      id: 8,
       options: {
         fieldCategory: 'nat_juridica',
         viewMore: false,
@@ -667,7 +631,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Tipo productor',
     cardConfig: {
       type: CardType.Bar,
-      id: 10,
+      id: 9,
       options: {
         fieldCategory: 'tipo_productor',
         viewMore: false,
@@ -706,7 +670,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Sexo',
     cardConfig: {
       type: CardType.Bar,
-      id: 11,
+      id: 10,
       options: {
         fieldCategory: 'sexo',
         viewMore: false,
@@ -745,7 +709,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Cadenas por sector',
     cardConfig: {
       type: CardType.Bar,
-      id: 12,
+      id: 11,
       options: {
         fieldCategory: 'cadena',
         viewMore: false,
@@ -787,7 +751,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Eslabones por cadena',
     cardConfig: {
       type: CardType.Bar,
-      id: 13,
+      id: 12,
       options: {
         fieldCategory: 'eslabon',
         viewMore: false,
@@ -829,7 +793,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Destinos de crédito por eslabón',
     cardConfig: {
       type: CardType.Bar,
-      id: 13,
+      id: 12,
       options: {
         fieldCategory: 'destino',
         viewMore: false,
@@ -909,7 +873,7 @@ export const QUERY_SCHEMA: Query[] = [
       type: CardType.Multiserie,
       id: 2,
       options: {
-        subtitle: 'Nro. de operaciones',
+        subtitle: 'Nro. operaciones',
         viewMore: false,
         fieldCategory: 'anio',
         fieldSerie: 'tipo_cartera',
@@ -960,6 +924,7 @@ export const QUERY_SCHEMA: Query[] = [
         value: 'dpto_cnmbr'
       }],
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'dpto_cnmbr',
         serieConfig: [{
           name: 'dpto_cnmbr',
@@ -998,6 +963,7 @@ export const QUERY_SCHEMA: Query[] = [
       type: CardType.Bar,
       id: 4,
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'tipo_interm',
         serieConfig: [{
           name: 'tipo_interm',
@@ -1031,7 +997,7 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
-    name: 'Cadenas por sector',
+    name: 'Sector',
     cardConfig: {
       type: CardType.Bar,
       id: 5,
@@ -1043,6 +1009,7 @@ export const QUERY_SCHEMA: Query[] = [
         value: 'eslabon'
       }],
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'sector',
         serieConfig: [{
           name: 'sector',
@@ -1076,7 +1043,7 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
-    name: 'Eslabones por cadena',
+    name: 'Cadena',
     cardConfig: {
       type: CardType.Bar,
       id: 6,
@@ -1091,6 +1058,7 @@ export const QUERY_SCHEMA: Query[] = [
         value: 'eslabon'
       }],
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'cadena',
         serieConfig: [{
           name: 'cadena',
@@ -1124,7 +1092,7 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
-    name: 'Dest. crédito por eslabón',
+    name: 'Eslabón',
     cardConfig: {
       type: CardType.Bar,
       id: 7,
@@ -1133,6 +1101,7 @@ export const QUERY_SCHEMA: Query[] = [
         value: 'eslabon'
       }],
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'eslabon',
         serieConfig: [{
           name: 'eslabon',
@@ -1171,6 +1140,7 @@ export const QUERY_SCHEMA: Query[] = [
       type: CardType.Pie,
       id: 8,
       options: {
+        subtitle: 'Nro. operaciones',
         fieldCategory: 'tipo_productor',
         serieConfig: [{
           name: 'tipo_productor',
