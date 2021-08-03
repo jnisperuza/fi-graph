@@ -1,7 +1,7 @@
 import { ImmutableObject } from 'seamless-immutable';
 // @ts-ignore
 import { React } from 'jimu-core';
-import { Card, CardOptions, CardType } from './components/Card/config';
+import { Card, CardOptions, CardType, FormatType } from './components/Card/config';
 
 export interface State {
   wrapperFilterStatusRef: React.RefObject<HTMLDivElement>;
@@ -793,7 +793,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     name: 'Destinos de crédito por eslabón',
     cardConfig: {
       type: CardType.Bar,
-      id: 12,
+      id: 13,
       options: {
         fieldCategory: 'destino',
         viewMore: false,
@@ -827,6 +827,54 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
         }
       ],
       orderByFields: ['total_opif_sum DESC']
+    }
+  },
+  {
+    parentCard: 1,
+    type: FilterType.Instrument,
+    name: 'Crédito colocaciones (distribución mes)',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 14,
+      options: {
+        fieldCategory: 'mes',
+        viewMore: false,
+        fullWidth: true,
+        serieConfig: [{
+          yField: 'total_opif_sum'
+        }],
+        formatConfig: {// Format data
+          fields: [{
+            name: 'mes', // Field name from db schema
+            format: FormatType.Month
+          }],
+        },
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    whereFields: ['anio'], // For predefined fields
+    queryVars: ['periodData.0'], // From state
+    query: {
+      where: `anio={anio}`, // Predefined where
+      returnGeometry: false,
+      groupByFieldsForStatistics: ['subtipo_inst', 'mes'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['mes DESC']
     }
   },
 ]
@@ -892,7 +940,7 @@ export const QUERY_SCHEMA: Query[] = [
     whereFields: ['subtipo_inst', 'anio'], // For predefined fields
     queryVars: ['periodData.0', 'previousYear'], // From state
     query: {
-      where: `subtipo_inst='CRE COLOCACIONES' and anio={anio} or anio={year}`,
+      where: `subtipo_inst='CRE COLOCACIONES' and anio={anio} or anio={year}`, // Predefined where
       returnGeometry: false,
       groupByFieldsForStatistics: ['anio', 'tipo_cartera'],
       outStatistics: [

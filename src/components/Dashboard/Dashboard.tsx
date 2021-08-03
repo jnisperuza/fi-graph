@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { DOWNLOAD_BUTTONS, FILTER_PANEL, Dashboard, UnifiedCard } from './config';
+import React, { useEffect } from 'react';
+import { DOWNLOAD_BUTTONS, FILTER_PANEL, Dashboard } from './config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 import Card from '../Card/Card';
@@ -7,8 +7,6 @@ import { groupBy } from '../../helpers/utils';
 
 import './Dashboard.scss';
 import { CardType } from '../Card/config';
-
-const unifiedCards = [];
 
 function Dashboard(props: Dashboard) {
     const {
@@ -19,8 +17,6 @@ function Dashboard(props: Dashboard) {
         getData,
         preloader
     } = props;
-
-    // const [unifiedCards, setUnifiedCards] = useState([]);
 
     useEffect(() => {
         controlInterface(true);

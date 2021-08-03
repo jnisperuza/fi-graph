@@ -23,14 +23,32 @@ import {
   FilterType
 } from '../config';
 
+import {
+  CardType,
+  Card as ICard,
+  FormatConfigField,
+  FormatType
+} from '../components/Card/config';
+
+import {
+  getData,
+  unifyFilters,
+  where,
+  getPeriodLabels,
+  getTerritoryLabels,
+  applyRules,
+  formatFilterStatus,
+  formatPredefinedWhere,
+  cleanWhere,
+  unionCardData
+} from '../helpers/process';
+
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
-import { CardType, Card as ICard } from '../components/Card/config';
-import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus, formatPredefinedWhere, cleanWhere, unionCardData } from '../helpers/process';
+import { SHORT_MONTH_NAMES } from '../helpers/utils';
 import Dashboard from '../components/Dashboard/Dashboard';
 
 import "./widget.scss";
-import { groupBy, stringFormat } from '../helpers/utils';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -161,6 +179,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   buildQueryData() {
     const queryData: QueryData[] = [];
     const { queries } = this.state;
+    if (!queries.length) return;
     const ds = this.getOriginDataSource();
     if (!ds) return;
     const iterate = (e: Query[], item = 0) => {
@@ -188,11 +207,9 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       } catch (error) { }
     }
 
-    if (queries.length) {
-      // Start preloader
-      this.setState({ preloader: true });
-      iterate(queries);
-    }
+    // Start preloader
+    this.setState({ preloader: true });
+    iterate(queries);
   }
 
   processDataDashboard() {
@@ -214,6 +231,20 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const mappedDataUnion = unionCardData(_queryDataDashboard);
     _queryDataDashboard = withoutItemsToJoin.concat(mappedDataUnion);
 
+    /** Format a specific field by REFERENCE */
+    const toFormat = _queryDataDashboard.filter((item: any) => item.cardConfig?.options?.formatConfig?.fields?.length);
+    toFormat.forEach((item: any) => {
+      const { fields } = item.cardConfig.options.formatConfig;
+      fields.forEach((field: FormatConfigField) => {
+        item.data.forEach((_item: any) => {
+          // MONTH
+          if (field.format === FormatType.Month) {
+            _item[field.name] = SHORT_MONTH_NAMES[_item[field.name]];
+          }
+        });
+      });
+    });
+
     return _queryDataDashboard;
   }
 
@@ -228,7 +259,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       // Only for instruments card
       if (selectedCard.filter.type === FilterType.Instrument) {
         const key = Object.keys(_filter.filterList)[0];
-        _filter.filterList[key][0].value = selectedCard.options.title;
+        _filter.filterList[key][0].value = selectedCard.options.title; // <- Instrument ID
         _filter.filterList[key] = [_filter.filterList[key][0]];
       }
       return _filter;

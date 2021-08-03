@@ -165,6 +165,10 @@ export enum CardType {
     AmountRow = 'AMOUNT_ROW',
 }
 
+export enum FormatType {
+    Month = 'MONTH',
+}
+
 export interface SerieConfig {
     name?: string;
     yField?: string;
@@ -177,8 +181,14 @@ export interface TooltipConfig {
     customFieldLabel?: string;
 }
 
+export interface FormatConfigField {
+    name: string;
+    format: FormatType;
+}
+
 export interface FormatConfig {
-    groupByField: string;
+    groupByField?: string;
+    fields?: FormatConfigField[];
 }
 
 export interface CardOptions {
