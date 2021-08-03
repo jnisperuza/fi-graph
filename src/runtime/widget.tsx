@@ -26,11 +26,11 @@ import {
 import FilterStatus from '../components/FilterStatus/FilterStatus';
 import Card from '../components/Card/Card';
 import { CardType, Card as ICard } from '../components/Card/config';
-import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus, formatPredefinedWhere, cleanWhere } from '../helpers/process';
+import { getData, unifyFilters, where, getPeriodLabels, getTerritoryLabels, applyRules, formatFilterStatus, formatPredefinedWhere, cleanWhere, unionCardData } from '../helpers/process';
 import Dashboard from '../components/Dashboard/Dashboard';
 
 import "./widget.scss";
-import { stringFormat } from '../helpers/utils';
+import { groupBy, stringFormat } from '../helpers/utils';
 
 export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { widgetState: WidgetState }, IMWidgetState> {
 
@@ -195,6 +195,28 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     }
   }
 
+  processDataDashboard() {
+    const { queryDataDashboard } = this.state;
+    let _queryDataDashboard = JSON.parse(JSON.stringify(queryDataDashboard));
+
+    /** Rule remove items */
+    _queryDataDashboard = _queryDataDashboard.map(item => {
+      if (item.cardConfig?.excludeRow instanceof Array) {
+        item.cardConfig.excludeRow.forEach(row => {
+          item.data = item.data.filter(_item => _item[row.field] !== row.value);
+        });
+      }
+      return item;
+    });
+
+    /** Rule union Card */
+    const withoutItemsToJoin = _queryDataDashboard.filter((item: any) => !item.cardConfig?.unionCard);
+    const mappedDataUnion = unionCardData(_queryDataDashboard);
+    _queryDataDashboard = withoutItemsToJoin.concat(mappedDataUnion);
+
+    return _queryDataDashboard;
+  }
+
   buildQueryDataDashboard() {
     const { filters, selectedCard } = this.state;
     const queryDataDashboard: QueryData[] = [];
@@ -237,7 +259,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
               query: e[item],
             });
             // Update state
-            this.setState({ queryDataDashboard, refresh: true });
+            this.setState({ queryDataDashboard });
             // Next item
             item++;
             if (item < e.length) {
@@ -404,7 +426,7 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
             <Dashboard
               selectedCard={this.state.selectedCard}
               preloader={preloader}
-              data={this.state.queryDataDashboard}
+              data={this.processDataDashboard()}
               handleViewMore={this.handleViewMore}
               refresh={this.handleUIRefresh}
               getData={this.buildQueryDataDashboard}

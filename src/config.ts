@@ -61,9 +61,17 @@ export interface Hide {
   value: string;
 }
 
+export interface UnionCard {
+  id: number;
+  field: string;
+  value: string | number;
+}
+
 export interface CardConfig {
   type: CardType;
   id?: number; // to control level dependencies
+  unionCard?: UnionCard; // to dashboard
+  excludeRow?: Hide[]; // to dashboard
   hide?: Hide[];
   options?: CardOptions;
 }
@@ -322,8 +330,13 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     type: FilterType.Territory,
     name: 'PDET',
     cardConfig: {
-      type: CardType.Bar,
+      type: CardType.AmountRow,
       id: 2,
+      unionCard: {
+        id: 100,
+        field: 'pdet',
+        value: 'Si'
+      },
       options: {
         fieldCategory: 'pdet',
         viewMore: false,
@@ -361,8 +374,13 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     type: FilterType.Territory,
     name: 'ZOMAC',
     cardConfig: {
-      type: CardType.Bar,
+      type: CardType.AmountRow,
       id: 3,
+      unionCard: {
+        id: 100,
+        field: 'zomac',
+        value: 'Si'
+      },
       options: {
         fieldCategory: 'zomac',
         viewMore: false,
@@ -402,6 +420,11 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     cardConfig: {
       type: CardType.Bar,
       id: 4,
+      // rule for dashboard
+      excludeRow: [{
+        field: 'mzeii',
+        value: 'No'
+      }],
       options: {
         fieldCategory: 'mzeii',
         viewMore: false,
@@ -441,6 +464,11 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     cardConfig: {
       type: CardType.Bar,
       id: 5,
+      // rule for dashboard
+      excludeRow: [{
+        field: 'zrc',
+        value: 'No'
+      }],
       options: {
         fieldCategory: 'zrc',
         viewMore: false,
@@ -478,8 +506,13 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     type: FilterType.Territory,
     name: 'Municipios frontera',
     cardConfig: {
-      type: CardType.Bar,
+      type: CardType.AmountRow,
       id: 6,
+      unionCard: {
+        id: 100,
+        field: 'mfront',
+        value: 'Si'
+      },
       options: {
         fieldCategory: 'mfront',
         viewMore: false,
@@ -884,9 +917,6 @@ export const QUERY_SCHEMA: Query[] = [
           name: 'tipo_cartera',
           yField: 'total_opif_sum'
         }],
-        // formatConfig: {// Format data
-        //   groupByField: 'anio',
-        // },
         tooltipConfig: {
           titleField: 'tipo_cartera',
           xFieldLabel: 'Nro. operaciones:',

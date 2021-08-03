@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
-import { DOWNLOAD_BUTTONS, FILTER_PANEL, Dashboard } from './config';
+import React, { useEffect, useState } from 'react';
+import { DOWNLOAD_BUTTONS, FILTER_PANEL, Dashboard, UnifiedCard } from './config';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 import Card from '../Card/Card';
 import { groupBy } from '../../helpers/utils';
 
 import './Dashboard.scss';
+import { CardType } from '../Card/config';
+
+const unifiedCards = [];
 
 function Dashboard(props: Dashboard) {
     const {
@@ -16,6 +19,8 @@ function Dashboard(props: Dashboard) {
         getData,
         preloader
     } = props;
+
+    // const [unifiedCards, setUnifiedCards] = useState([]);
 
     useEffect(() => {
         controlInterface(true);
@@ -64,8 +69,8 @@ function Dashboard(props: Dashboard) {
         }
     }
 
-    const iterateCards = (_data: any) => {
-        const { options, type, id } = _data.cardConfig;
+    const rowsAsCard = (_data: any) => {
+        const { options, type } = _data.cardConfig;
         const serieConfig = options?.serieConfig;
         const formatConfig = options?.formatConfig;
         const fieldCategory = options?.fieldCategory;
@@ -76,7 +81,6 @@ function Dashboard(props: Dashboard) {
             <Card
                 type={type}
                 data={grouped[group]}
-
                 options={{
                     ...options,
                     title: group
@@ -86,18 +90,33 @@ function Dashboard(props: Dashboard) {
 
     const renderCards = (_data: any) => {
         const eachRowIsACard = _data.cardConfig?.options?.eachRowIsACard;
-        return eachRowIsACard ?
-            iterateCards(_data) :
-            (
+
+        if (eachRowIsACard) {
+            return rowsAsCard(_data)
+        }
+
+        // Union cards
+        if (_data.type === CardType.AmountRow) {
+            return (
                 <Card
-                    type={_data.cardConfig.type}
+                    type={_data.type}
                     data={_data.data}
                     options={{
-                        ..._data.cardConfig.options,
-                        fullWidth: true,
                         title: _data.name
                     }} />
             )
+        }
+
+        // Default mode
+        return (
+            <Card
+                type={_data.cardConfig.type}
+                data={_data.data}
+                options={{
+                    ..._data.cardConfig.options,
+                    title: _data.name
+                }} />
+        )
     }
 
     return (

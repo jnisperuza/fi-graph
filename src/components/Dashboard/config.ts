@@ -11,3 +11,8 @@ export interface Dashboard {
     refresh?: () => void;
     handleViewMore?: () => void;
 }
+
+export interface UnifiedCard {
+    id: number;
+    cards: Card;
+}

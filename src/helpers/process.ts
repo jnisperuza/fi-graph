@@ -1,6 +1,6 @@
 import Highcharts from 'highcharts';
 import { CardOptions } from "../components/Card/config";
-import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, LOGICAL_OPERATORS, PeriodData, Query, State } from "../config";
+import { DatasourceResponse, DB_FIELDS, Filter, FilterList, FilterType, Hide, LOGICAL_OPERATORS, PeriodData, Query, QueryData, State } from "../config";
 import { groupBy, SHORT_MONTH_NAMES, stringFormat } from "./utils";
 
 const getDBField = (identifiers: Filter[], value: string) => {
@@ -351,4 +351,36 @@ export const applyRules = (queries: Query[], filters: Filter[]): Query[] => {
         // It is validated if there are elements with repeated configuration Id, to leave the first one
         return removeDuplicatesId(withRulesApplied);
     }
+}
+
+export const unionCardData = (queryDataDashboard: any[]) => {
+    const toUnite = queryDataDashboard
+        .filter(item => item.cardConfig?.unionCard)
+        .map(item => ({ unionId: item.cardConfig.unionCard.id, item }));
+
+    const cardType = toUnite?.[0]?.item?.cardConfig?.type;
+    const groupByUnionId = groupBy(toUnite, 'unionId');
+    const unifiedData = Object.keys(groupByUnionId).map(key => {
+        const group = groupByUnionId[key];
+        if (group instanceof Array) {
+            return group.map(card => {
+                try {
+                    const { field, value } = card.item.cardConfig.unionCard;
+                    if (field && value) {
+                        const found = card.item.data.find(row => row[field] === value);
+                        return {
+                            name: card.item.name,
+                            amount: found.total_opif_sum,
+                            value: found.valor_opif_sum
+                        }
+                    }
+                } catch (error) { }
+            });
+        }
+    }).filter(row => row);
+
+    return unifiedData.map(group => {
+        const name = group.map(gp => gp.name).join(', ');
+        return { name, type: cardType, data: group }
+    });
 }

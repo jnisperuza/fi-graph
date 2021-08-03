@@ -11,7 +11,7 @@ import { formatDataBar, formatDataMultiserie, formatDataPie } from '../../helper
 import './Card.scss';
 
 function Card(props: Card) {
-    const { type, options, data, handleViewMore } = props;
+    const { type, options, filter, data, handleViewMore } = props;
     const [wrapperRef] = useState(React.createRef<HTMLDivElement>());
 
     useEffect(() => {
@@ -37,7 +37,7 @@ function Card(props: Card) {
     }
 
     const renderAmountType = () => (
-        <div className={`Card amount ${options?.fullWidth ? 'full-width' : 'half-width'}`} ref={wrapperRef}>
+        <div className={`Card amount ${options?.fullWidth ? 'full-width' : 'half-width'}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
             <div className="header">
                 <h1 title={options?.title}>{options?.title}</h1>
             </div>
@@ -68,6 +68,40 @@ function Card(props: Card) {
         </div>
     );
 
+    const renderAmountRowType = () => (
+        <div className="Card amount-row" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+            <div className="header">
+                <div className="wrapper-title">
+                    <h1 title={options?.title}>{options?.title}</h1>
+                    <h2 title={options?.subtitle}>{options?.subtitle}</h2>
+                </div>
+                {options?.viewMore !== false && (
+                    <div className="description">
+                        <button className="view-more" onClick={() => handleViewMoreCard(props)}>
+                            <FontAwesomeIcon icon={faSearch} />
+                            <span>Ver más</span>
+                        </button>
+                    </div>
+                )}
+            </div>
+            <div className="content">
+                <>
+                    {data?.length ? data.map((item: any) => (
+                        <div className="row-card">
+                            <span className="title">{item.name}</span>
+                            <span className="amount">Nro. operaciones: {numberFormat(item?.amount) || 0}</span>
+                            <span className="value">Valor: {currencyFormat(item?.value) || 0}</span>
+                        </div>
+                    )) : (
+                        <div className="empty-data">
+                            <span>No hay datos</span>
+                        </div>
+                    )}
+                </>
+            </div>
+        </div>
+    );
+
     const renderBarType = () => {
         const { categories, series, tooltip } = formatDataBar(options, data);
         const ChartOptions = {
@@ -80,7 +114,7 @@ function Card(props: Card) {
             tooltip
         }
         return (
-            <div className="Card bar" ref={wrapperRef}>
+            <div className="Card bar" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>
@@ -123,7 +157,7 @@ function Card(props: Card) {
         }
 
         return (
-            <div className="Card pie" ref={wrapperRef}>
+            <div className="Card pie" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>
@@ -170,7 +204,7 @@ function Card(props: Card) {
         }
 
         return (
-            <div className="Card multiserie" ref={wrapperRef}>
+            <div className="Card multiserie" ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
                 <div className="header">
                     <div className="wrapper-title">
                         <h1 title={options?.title}>{options?.title}</h1>
@@ -207,6 +241,7 @@ function Card(props: Card) {
     return (
         <>
             {type === CardType.Amount && renderAmountType()}
+            {type === CardType.AmountRow && renderAmountRowType()}
             {type === CardType.Bar && renderBarType()}
             {type === CardType.Pie && renderPieType()}
             {type === CardType.Multiserie && renderMultiserieType()}

@@ -151,7 +151,8 @@ export enum CardType {
     Amount = 'AMOUNT',
     Pie = 'PIE',
     Bar = 'BAR',
-    Multiserie = 'MULTISERIE'
+    Multiserie = 'MULTISERIE',
+    AmountRow = 'AMOUNT_ROW',
 }
 
 export interface SerieConfig {
@@ -190,8 +191,8 @@ export interface CardOptions {
 
 export interface CardFilter {
     cardId: number;
-    type: FilterType;
-    query: Query;
+    type?: FilterType;
+    query?: Query;
 }
 
 export interface Card {
