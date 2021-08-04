@@ -13,6 +13,22 @@ import './Card.scss';
 function Card(props: Card) {
     const { type, options, filter, data, handleViewMore } = props;
     const [wrapperRef] = useState(React.createRef<HTMLDivElement>());
+    /** Its function is to show the title of the charts only when they are in full screen */
+    const RESPONSIVE_RULES = {
+        rules: [{
+            condition: {
+                minHeight: 800 // to identify full-size mode
+            },
+            chartOptions: {
+                title: {
+                    text: options?.title
+                },
+                subtitle: {
+                    text: options?.subtitle
+                }
+            }
+        }]
+    };
 
     useEffect(() => {
         window.addEventListener('resize', handleResize);
@@ -110,6 +126,9 @@ function Card(props: Card) {
                 ...BAR_OPTIONS.xAxis,
                 categories
             },
+            responsive: {
+                ...RESPONSIVE_RULES
+            },
             series: series,
             tooltip
         }
@@ -152,6 +171,9 @@ function Card(props: Card) {
         const { series, tooltip } = formatDataPie(options, data);
         const ChartOptions = {
             ...PIE_OPTIONS,
+            responsive: {
+                ...RESPONSIVE_RULES
+            },
             series: series,
             tooltip
         }
@@ -195,6 +217,9 @@ function Card(props: Card) {
         const { categories, series, tooltip } = formatDataMultiserie(options, data);
         const ChartOptions = {
             ...MULTISERIE_OPTIONS,
+            responsive: {
+                ...RESPONSIVE_RULES
+            },
             xAxis: {
                 ...MULTISERIE_OPTIONS.xAxis,
                 categories

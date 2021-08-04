@@ -8,7 +8,7 @@ HC_exporting(Highcharts)
 
 Highcharts.setOptions({
     lang: {
-        resetZoom: '⟲',
+        resetZoom: 'Restablecer zoom',
         resetZoomTitle: 'Zoom normal',
         decimalPoint: ',',
         thousandsSep: '.',
@@ -70,15 +70,24 @@ const COMMON_GRAPH_OPTIONS = {
         borderRadius: 4,
         backgroundColor: 'white',
         resetZoomButton: {
+            position: {
+                align: 'right',
+                verticalAlign: 'middle',
+                x: 0,
+                y: -15
+            },
             theme: {
                 style: {
-                    fontSize: 14,
-                    fontWeight: 900,
-                    width: 22,
-                    height: 22,
+                    fontSize: 12
                 },
                 padding: 4,
             }
+        }
+    },
+    navigation: {
+        menuItemHoverStyle: {
+            background: '#008a7a',
+            color: '#ffffff'
         }
     },
     legend: {
@@ -87,8 +96,12 @@ const COMMON_GRAPH_OPTIONS = {
     credits: {
         enabled: false
     },
-    title: false,
-    subtitle: false,
+    title: {
+        text: ''
+    },
+    subtitle: {
+        text: ''
+    },
 };
 
 export const PIE_OPTIONS = {

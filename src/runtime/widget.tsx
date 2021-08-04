@@ -20,7 +20,8 @@ import {
   Query,
   QueryData,
   QUERY_SCHEMA_DASHBOARD,
-  FilterType
+  FilterType,
+  DEFAULT_FILTER_YEAR
 } from '../config';
 
 import {
@@ -81,9 +82,12 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
 
   componentWillReceiveProps() {
     this.updateFilters();
-    this.buildQueryData();
-    // Update FilterStatus (badge)
-    this.buildFilterStatus();
+    // Time to wait for redux to update
+    setTimeout(() => {
+      this.buildQueryData();
+      // Update FilterStatus (badge)
+      this.buildFilterStatus();
+    });
   }
 
   getOriginDataSource() {
@@ -157,9 +161,16 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   }
 
   buildQueries() {
-    const { filters } = this.state;
+    const { filters, periodData } = this.state;
+    /** If a year has not been defined in the filters, it is filtered by the most recent */
+    const hasYearFilter = filters.filter(item => item?.filterType === FilterType.Period).find(item => item?.field === 'anio');
+    if (!hasYearFilter && periodData?.length) {
+      const yearFilter = JSON.parse(JSON.stringify(DEFAULT_FILTER_YEAR));
+      yearFilter.value = periodData[0].anio;
+      filters.push(yearFilter);
+    }
     const formattedFilters = unifyFilters(filters);
-    const whereList = formattedFilters.map(item => where(item.filterList)).filter(item => item);
+    const whereList = formattedFilters.map(item => where(item?.filterList)).filter(item => item);
     const queries: Query[] = QUERY_SCHEMA.map(querySchema => {
       // Predefined where from config
       const predefinedWhere = formatPredefinedWhere(querySchema, this.state);
@@ -249,9 +260,16 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   }
 
   buildQueryDataDashboard() {
-    const { filters, selectedCard } = this.state;
+    const { filters, selectedCard, periodData } = this.state;
     const queryDataDashboard: QueryData[] = [];
     if (!selectedCard || !selectedCard?.filter) return;
+    /** If a year has not been defined in the filters, it is filtered by the most recent */
+    const hasYearFilter = filters.filter(item => item?.filterType === FilterType.Period).find(item => item?.field === 'anio');
+    if (!hasYearFilter && periodData?.length) {
+      const yearFilter = JSON.parse(JSON.stringify(DEFAULT_FILTER_YEAR));
+      yearFilter.value = periodData[0].anio;
+      filters.push(yearFilter);
+    }
     // Select the same filter type
     const sameFilterType = filters.filter(_filter => _filter.filterType === selectedCard.filter.type);
     // Set single filter value

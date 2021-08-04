@@ -137,6 +137,13 @@ export const INTL = {
   currency: 'COP'
 };
 export const LOGICAL_OPERATORS = ['or', 'and', '>=', '<=', '>', '<'];
+// Single Year
+export const DEFAULT_FILTER_YEAR: Filter = {
+  filterType: FilterType.Period,
+  field: 'anio',
+  label: 'Año',
+  value: null // From state
+}
 
 export const DEFAULT_FILTER = [
   {
@@ -748,21 +755,21 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 6,
     type: FilterType.Product,
-    name: 'Eslabones por cadena',
+    name: 'Eslabón por cadena',
     cardConfig: {
-      type: CardType.Bar,
+      type: CardType.Multiserie,
       id: 12,
       options: {
-        fieldCategory: 'eslabon',
+        fieldCategory: 'cadena',
+        fieldSerie: 'eslabon',
         viewMore: false,
-        eachRowIsACard: true,
+        fullWidth: true,
         serieConfig: [{
+          name: 'eslabon',
           yField: 'total_opif_sum'
         }],
-        formatConfig: {// Format data
-          groupByField: 'cadena',
-        },
         tooltipConfig: {
+          titleField: 'eslabon',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -790,7 +797,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 7,
     type: FilterType.Product,
-    name: 'Destinos de crédito por eslabón',
+    name: 'Destino de crédito por cadena',
     cardConfig: {
       type: CardType.Bar,
       id: 13,
@@ -802,7 +809,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
           yField: 'total_opif_sum'
         }],
         formatConfig: {// Format data
-          groupByField: 'eslabon',
+          groupByField: 'cadena',
         },
         tooltipConfig: {
           xFieldLabel: 'Nro. operaciones:',
@@ -813,7 +820,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     },
     query: {
       returnGeometry: false,
-      groupByFieldsForStatistics: ['eslabon', 'destino'],
+      groupByFieldsForStatistics: ['cadena', 'destino'],
       outStatistics: [
         {
           statisticType: 'sum',
