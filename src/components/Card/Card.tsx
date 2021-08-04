@@ -69,7 +69,7 @@ function Card(props: Card) {
                         <span title={numberFormat(data?.amount)}>
                             {numberFormat(data?.amount) || 0}
                         </span>
-                        <span>Cantidad</span>
+                        <span>Nro. operaciones</span>
                     </li>
                 </ul>
             </div>
