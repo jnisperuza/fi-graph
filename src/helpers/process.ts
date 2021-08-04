@@ -220,6 +220,7 @@ export const formatFilterStatus = (last: Filter) => {
                 return SHORT_MONTH_NAMES[last.value];
             }
         // TERRITORY
+        case 'pdet':
         case 'mfront':
         case 'zrc':
         case 'mzeii':
