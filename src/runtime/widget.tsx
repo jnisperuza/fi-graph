@@ -97,10 +97,28 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
   handleRemoveFilter(filter: string) {
     const { filters } = this.state;
     const found = filters.find(item => String(item?.value).includes(filter));
+    let normalizedFilter = filter;
+
+    // PERIOD Month
+    const monthNumber = Object.keys(SHORT_MONTH_NAMES).find(key => SHORT_MONTH_NAMES[key] === filter);
+    if (monthNumber) {
+      normalizedFilter = monthNumber; // Sample: [1: 'Ene']
+    }
+    // TERRITORY
+    const territoryCheck = filter.split(' '); // Sample: [mfront' 'Si]
+    if (territoryCheck?.length) {
+      switch (territoryCheck[0]) {
+        case 'mfront':
+        case 'zrc':
+        case 'mzeii':
+        case 'zomac':
+          normalizedFilter = territoryCheck[1];
+      }
+    }
 
     if (found) {
       const filterToClean = { ...found };
-      filterToClean.value = [filter];
+      filterToClean.value = [normalizedFilter];
 
       this.props.dispatch({
         type: 'CLEAR_FILTERS',

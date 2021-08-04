@@ -215,7 +215,7 @@ export const formatFilterStatus = (last: Filter) => {
         // PERIOD
         case 'mes':
             if (last.value instanceof Array) {
-                return last.value.map((month: string | number) => SHORT_MONTH_NAMES[month]).toString();
+                return last.value.map((month: string | number) => SHORT_MONTH_NAMES[month]);
             } else {
                 return SHORT_MONTH_NAMES[last.value];
             }
@@ -230,11 +230,7 @@ export const formatFilterStatus = (last: Filter) => {
                 return [`${last.label} (${last.value})`];
             }
         default:
-            if (last.value instanceof Array) {
-                return last.value.toString();
-            } else {
-                return last.value;
-            }
+            return last.value;
     }
 }
 
