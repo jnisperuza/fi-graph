@@ -471,7 +471,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     cardConfig: {
       type: CardType.Bar,
       id: 5,
-      // rule for dashboard
+      // Rule for dashboard
       excludeRow: [{
         field: 'zrc',
         value: 'No'
@@ -515,6 +515,8 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
     cardConfig: {
       type: CardType.AmountRow,
       id: 6,
+      // Defining the same code that at the time of rendering
+      // shows the data in the same AmountRow type card.
       unionCard: {
         id: 100,
         field: 'mfront',
