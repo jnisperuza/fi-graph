@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 import Card from '../Card/Card';
 import { groupBy } from '../../helpers/utils';
+import { CardType } from '../Card/config';
 
 import './Dashboard.scss';
-import { CardType } from '../Card/config';
 
 function Dashboard(props: Dashboard) {
     const {

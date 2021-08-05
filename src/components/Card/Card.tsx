@@ -7,7 +7,6 @@ import { CardType, Card, PIE_OPTIONS, BAR_OPTIONS, MULTISERIE_OPTIONS } from './
 import { currencyFormat, numberFormat } from '../../helpers/utils';
 import { formatDataBar, formatDataMultiserie, formatDataPie } from '../../helpers/process';
 
-
 import './Card.scss';
 
 function Card(props: Card) {
