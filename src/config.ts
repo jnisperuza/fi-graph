@@ -713,7 +713,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 5,
     type: FilterType.Product,
-    name: 'Cadenas por sector',
+    name: 'Cadenas por sector', // Not visible because of 'eachRowIsACard' property
     cardConfig: {
       type: CardType.Bar,
       id: 11,
@@ -755,7 +755,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 6,
     type: FilterType.Product,
-    name: 'Eslabón por cadena',
+    name: 'Cadena',
     cardConfig: {
       type: CardType.Multiserie,
       id: 12,
@@ -839,7 +839,7 @@ export const QUERY_SCHEMA_DASHBOARD: Query[] = [
   {
     parentCard: 1,
     type: FilterType.Instrument,
-    name: 'Crédito colocaciones (distribución mes)',
+    name: 'Mes',
     cardConfig: {
       type: CardType.Bar,
       id: 14,
@@ -900,7 +900,10 @@ export const QUERY_SCHEMA: Query[] = [
         viewMoreWhen: {
           field: 'title', // Title card
           value: 'CRE COLOCACIONES'
-        }
+        },
+        dashboardConfig: {
+          subtitle: 'Nro. operaciones'
+        },
       }
     },
     query: {
@@ -930,14 +933,14 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         viewMore: false,
-        fieldCategory: 'anio',
-        fieldSerie: 'tipo_cartera',
+        fieldCategory: 'tipo_cartera',
+        fieldSerie: 'anio',
         serieConfig: [{
-          name: 'tipo_cartera',
+          name: 'anio',
           yField: 'total_opif_sum'
         }],
         tooltipConfig: {
-          titleField: 'tipo_cartera',
+          titleField: 'anio',
           xFieldLabel: 'Nro. operaciones:',
           customField: 'valor_opif_sum',
           customFieldLabel: 'Valor: $'
@@ -967,7 +970,7 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Territory,
-    name: 'Territorio',
+    name: 'Top 5 Territorio',
     cardConfig: {
       type: CardType.Bar,
       id: 3,
@@ -981,6 +984,10 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'dpto_cnmbr',
+        dashboardConfig: {
+          title: 'Territorio',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'dpto_cnmbr',
           yField: 'total_opif_sum'
@@ -1013,13 +1020,17 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Intermediary,
-    name: 'Tipo intermediario',
+    name: 'Top 5 Tipo intermediario',
     cardConfig: {
       type: CardType.Bar,
       id: 4,
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'tipo_interm',
+        dashboardConfig: {
+          title: 'Top 5 Tipo intermediario',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'tipo_interm',
           yField: 'total_opif_sum'
@@ -1066,6 +1077,10 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'sector',
+        dashboardConfig: {
+          title: 'Cadenas por sector',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'sector',
           yField: 'total_opif_sum'
@@ -1092,13 +1107,12 @@ export const QUERY_SCHEMA: Query[] = [
           outStatisticFieldName: 'valor_opif_sum'
         }
       ],
-      orderByFields: ['total_opif_sum DESC'],
-      pageSize: 5
+      orderByFields: ['total_opif_sum DESC']
     }
   },
   {
     type: FilterType.Product,
-    name: 'Cadena',
+    name: 'Top 5 Cadenas',
     cardConfig: {
       type: CardType.Bar,
       id: 6,
@@ -1115,6 +1129,10 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'cadena',
+        dashboardConfig: {
+          title: 'Eslabones por cadena',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'cadena',
           yField: 'total_opif_sum'
@@ -1147,7 +1165,7 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
-    name: 'Eslabón',
+    name: 'Top 5 Eslabones',
     cardConfig: {
       type: CardType.Bar,
       id: 7,
@@ -1158,6 +1176,10 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'eslabon',
+        dashboardConfig: {
+          title: 'Destinos por cadena',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'eslabon',
           yField: 'total_opif_sum'
@@ -1197,6 +1219,10 @@ export const QUERY_SCHEMA: Query[] = [
       options: {
         subtitle: 'Nro. operaciones',
         fieldCategory: 'tipo_productor',
+        dashboardConfig: {
+          title: 'Características productor',
+          subtitle: 'Nro. operaciones'
+        },
         serieConfig: [{
           name: 'tipo_productor',
           yField: 'total_opif_sum'

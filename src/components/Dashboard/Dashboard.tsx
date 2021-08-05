@@ -123,7 +123,8 @@ function Dashboard(props: Dashboard) {
                 </div>
             )}
             <div className="header">
-                <span>{selectedCard?.options?.title}</span>
+                <h1>{selectedCard?.options?.dashboardConfig?.title || selectedCard?.options?.title}</h1>
+                <h2>{selectedCard?.options?.dashboardConfig?.subtitle}</h2>
             </div>
             <div className="content">
                 {data.map((_data: any) => renderCards(_data))}

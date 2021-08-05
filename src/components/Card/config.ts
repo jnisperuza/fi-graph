@@ -50,6 +50,17 @@ Highcharts.setOptions({
         '#1d5630',
         '#67ba58'
     ],
+    exporting: {
+        buttons: {
+            contextButton: {
+                menuItems: [
+                    'viewFullscreen',
+                    'printChart',
+                    'downloadPNG',
+                ]
+            }
+        }
+    },
     plotOptions: {
         series: {
             animation: false
@@ -67,7 +78,7 @@ const COMMON_GRAPH_OPTIONS = {
     },
     chart: {
         zoomType: 'xy',
-        borderRadius: 4,
+        borderRadius: 0,
         backgroundColor: 'white',
         resetZoomButton: {
             position: {
@@ -204,6 +215,11 @@ export interface FormatConfig {
     fields?: FormatConfigField[];
 }
 
+export interface DashboardConfig {
+    title?: string;
+    subtitle?: string;
+}
+
 export interface CardOptions {
     title?: string;
     subtitle?: string;
@@ -220,6 +236,7 @@ export interface CardOptions {
     serieConfig?: SerieConfig[];
     tooltipConfig?: TooltipConfig;
     formatConfig?: FormatConfig;
+    dashboardConfig?: DashboardConfig;
 }
 
 export interface CardFilter {

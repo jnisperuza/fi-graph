@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch } from '@fortawesome/free-solid-svg-icons';
 import Highcharts from 'highcharts';
@@ -29,22 +29,6 @@ function Card(props: Card) {
             }
         }]
     };
-
-    useEffect(() => {
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [])
-
-    const handleResize = () => {
-        const { width } = wrapperRef?.current && wrapperRef.current.getBoundingClientRect();
-        Highcharts.charts.forEach((chart) => {
-            if (chart && width > 200 && chart.fullscreen.isOpen === false) {
-                chart.setSize(width - 15);
-            }
-        });
-    }
 
     const handleViewMoreCard = (card: Card) => {
         if (handleViewMore instanceof Function) {
