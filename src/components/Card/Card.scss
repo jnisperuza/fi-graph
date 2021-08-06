@@ -290,6 +290,18 @@
     }
   }
 
+  &.without-graph {
+    @extend .graphClass;
+    height: auto;
+
+    // Overwrite
+    div.header {
+      div.description {
+        grid-template-rows: 1fr;
+      }
+    }
+  }
+
   &.pie,
   &.bar,
   &.multiserie {

@@ -179,6 +179,44 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     setTimeout(dispatch);
   }
 
+  /**
+    * 
+    * @name addQueryData
+    * @param {any} e 
+    * @param {number} item 
+    * @param {QueryData[]} acummulatorRef 
+    * @param {string} acummulatorName 
+    * @param {Function} iterator 
+    * @description Add item data for each query
+    */
+  addQueryData(
+    e: Query[],
+    item: number,
+    data: any[],
+    acummulatorRef: QueryData[],
+    acummulatorName: string,
+    iterator: (data: any[], position: number) => void
+  ) {
+    acummulatorRef.push({
+      name: e[item].name,
+      cardConfig: e[item].cardConfig,
+      data: data,
+      query: e[item],
+    });
+    // Update state
+    this.setState({ [acummulatorName]: acummulatorRef });
+    // Next item
+    item++;
+    if (item < e.length) {
+      if (iterator instanceof Function) {
+        iterator(e, item);
+      }
+    } else {
+      // Shutdown preloader and refresh template
+      this.setState({ preloader: false, refresh: true });
+    }
+  }
+
   buildQueries() {
     const { filters, periodData } = this.state;
     /** If a year has not been defined in the filters, it is filtered by the most recent */
@@ -196,7 +234,10 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       const cleanedWhere = cleanWhere(whereList.join(' and ').trim(), querySchema.whereFields);
       // Unify all where
       const _querySchema = JSON.parse(JSON.stringify(querySchema));
-      _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      // Validation for cardType WithoutGraph
+      if (_querySchema.query) {
+        _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      }
       return _querySchema;
     });
     const queriesAppliedRules = applyRules(queries, filters);
@@ -215,24 +256,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const iterate = (e: Query[], item = 0) => {
       try {
         if (e[item] !== undefined) {
-          ds.query(e[item].query).then((result: DatasourceResponse) => {
-            queryData.push({
-              name: e[item].name,
-              cardConfig: e[item].cardConfig,
-              data: getData(result),
-              query: e[item],
+          if (e[item].query) {
+            ds.query(e[item].query).then((result: DatasourceResponse) => {
+              this.addQueryData(e, item, getData(result), queryData, 'queryData', iterate);
             });
-            // Update state
-            this.setState({ queryData });
-            // Next item
-            item++;
-            if (item < e.length) {
-              iterate(e, item);
-            } else {
-              // Shutdown preloader and refresh template
-              this.setState({ preloader: false, refresh: true });
-            }
-          });
+          } else {
+            this.addQueryData(e, item, [], queryData, 'queryData', iterate);
+          }
         }
       } catch (error) { }
     }
@@ -310,7 +340,10 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
       const cleanedWhere = cleanWhere(whereList.join(' and ').trim(), querySchema.whereFields);
       // Set where
       const _querySchema = JSON.parse(JSON.stringify(querySchema));
-      _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      // Validation for cardType WhithoutGraph
+      if (_querySchema.query) {
+        _querySchema.query.where = predefinedWhere ? (cleanedWhere ? `${cleanedWhere} and ${predefinedWhere}` : predefinedWhere) : cleanedWhere;
+      }
       return _querySchema;
     });
     if (!queries.length) return;
@@ -319,24 +352,13 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     const iterate = (e: Query[], item = 0) => {
       try {
         if (e[item] !== undefined) {
-          ds.query(e[item].query).then((result: DatasourceResponse) => {
-            queryDataDashboard.push({
-              name: e[item].name,
-              cardConfig: e[item].cardConfig,
-              data: getData(result),
-              query: e[item],
+          if (e[item].query) {
+            ds.query(e[item].query).then((result: DatasourceResponse) => {
+              this.addQueryData(e, item, getData(result), queryDataDashboard, 'queryDataDashboard', iterate);
             });
-            // Update state
-            this.setState({ queryDataDashboard });
-            // Next item
-            item++;
-            if (item < e.length) {
-              iterate(e, item);
-            } else {
-              // Shutdown preloader and refresh template
-              this.setState({ preloader: false, refresh: true });
-            }
-          });
+          } else {
+            this.addQueryData(e, item, [], queryDataDashboard, 'queryDataDashboard', iterate);
+          }
         }
       } catch (error) { }
     }
@@ -387,7 +409,8 @@ export default class Widget extends React.PureComponent<AllWidgetProps<{}> & { w
     else if (
       qd.cardConfig.type === CardType.Bar ||
       qd.cardConfig.type === CardType.Pie ||
-      qd.cardConfig.type === CardType.Multiserie
+      qd.cardConfig.type === CardType.Multiserie ||
+      qd.cardConfig.type === CardType.WithoutGraph /** This card has the same chart type structure, but does not have a chart. */
     ) {
       return this.drawCardGraph(qd);
     }

@@ -364,20 +364,22 @@ export const unionCardData = (queryDataDashboard: any[]) => {
                 try {
                     const { field, value } = card.item.cardConfig.unionCard;
                     if (field && value) {
-                        const found = card.item.data.find(row => row[field] === value);
-                        return {
-                            name: card.item.name,
-                            amount: found.total_opif_sum,
-                            value: found.valor_opif_sum
+                        const found = card.item.data.find((row: any) => row[field] === value);
+                        if (found) {
+                            return {
+                                name: card.item.name,
+                                amount: found.total_opif_sum,
+                                value: found.valor_opif_sum
+                            }
                         }
                     }
                 } catch (error) { }
             });
         }
-    }).filter(row => row);
+    }).filter(row => row.filter(item => item).length);
 
     return unifiedData.map(group => {
-        const name = group.map(gp => gp.name).join(', ');
+        const name = group.map(gp => gp?.name).join(', ');
         return { name, type: cardType, data: group }
     });
 }

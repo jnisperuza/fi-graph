@@ -87,7 +87,7 @@ function Card(props: Card) {
                 <>
                     {data?.length ? data.map((item: any) => (
                         <div className="row-card">
-                            <span className="title">{item.name}</span>
+                            <span className="title">{item?.name}</span>
                             <span className="amount">Nro. operaciones: {numberFormat(item?.amount) || 0}</span>
                             <span className="value">Valor: {currencyFormat(item?.value) || 0}</span>
                         </div>
@@ -246,6 +246,27 @@ function Card(props: Card) {
         )
     }
 
+    const renderWithoutGraphType = () => {
+        return (
+            <div className={`Card without-graph ${options?.fullWidth ? 'full-width' : ''}`} ref={wrapperRef} data-id={filter?.cardId || Date.now()}>
+                <div className="header">
+                    <div className="wrapper-title">
+                        <h1 title={options?.title}>{options?.title}</h1>
+                        <h2 title={options?.subtitle}>{options?.subtitle}</h2>
+                    </div>
+                    {options.viewMore !== false && (
+                        <div className="description">
+                            <button className="view-more" onClick={() => handleViewMoreCard(props)}>
+                                <FontAwesomeIcon icon={faSearch} />
+                                <span>Ver más</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     return (
         <>
             {type === CardType.Amount && renderAmountType()}
@@ -253,6 +274,7 @@ function Card(props: Card) {
             {type === CardType.Bar && renderBarType()}
             {type === CardType.Pie && renderPieType()}
             {type === CardType.Multiserie && renderMultiserieType()}
+            {type === CardType.WithoutGraph && renderWithoutGraphType()}
         </>
     )
 }

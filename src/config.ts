@@ -131,11 +131,6 @@ export interface Data {
   intermediaryType?: CardData[];
 }
 
-export const PAGE_SIZE = 10000;
-export const INTL = {
-  code: 'es-CO',
-  currency: 'COP'
-};
 export const LOGICAL_OPERATORS = ['or', 'and', '>=', '<=', '>', '<'];
 // Single Year
 export const DEFAULT_FILTER_YEAR: Filter = {
@@ -1020,6 +1015,73 @@ export const QUERY_SCHEMA: Query[] = [
       pageSize: 5
     }
   },
+  // Second level graphics, the same identifier is handled,
+  // because conceptually it must be the same graphic
+  {
+    type: FilterType.Territory,
+    name: 'Top 5 Territorio',
+    cardConfig: {
+      type: CardType.Bar,
+      id: 3,
+      hide: [{
+        field: 'field',
+        value: 'mpio_cnmbr'
+      }],
+      options: {
+        subtitle: 'Nro. operaciones',
+        fieldCategory: 'mpio_cnmbr',
+        dashboardConfig: {
+          title: 'Territorio',
+          subtitle: 'Nro. operaciones'
+        },
+        serieConfig: [{
+          name: 'mpio_cnmbr',
+          yField: 'total_opif_sum'
+        }],
+        tooltipConfig: {
+          xFieldLabel: 'Nro. operaciones:',
+          customField: 'valor_opif_sum',
+          customFieldLabel: 'Valor: $'
+        }
+      }
+    },
+    query: {
+      returnGeometry: false,
+      groupByFieldsForStatistics: ['mpio_cnmbr'],
+      outStatistics: [
+        {
+          statisticType: 'sum',
+          onStatisticField: 'total_opif',
+          outStatisticFieldName: 'total_opif_sum'
+        },
+        {
+          statisticType: 'sum',
+          onStatisticField: 'valor_opif',
+          outStatisticFieldName: 'valor_opif_sum'
+        }
+      ],
+      orderByFields: ['total_opif_sum DESC'],
+      pageSize: 5
+    }
+  },
+  // Third level graphics, the same identifier is handled,
+  // For this point the graph is not necessary, we only need the See more button
+  {
+    type: FilterType.Territory,
+    name: 'Territorio',
+    cardConfig: {
+      type: CardType.WithoutGraph,
+      id: 3,
+      options: {
+        subtitle: 'Pulse el botón "Ver más"',
+        dashboardConfig: {
+          title: 'Territorio',
+          subtitle: 'Nro. operaciones'
+        },
+      }
+    },
+    query: null // This is not necessary, it is passed as null
+  },
   {
     type: FilterType.Intermediary,
     name: 'Top 5 Tipo intermediario',
@@ -1114,6 +1176,22 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
+    name: 'Sector',
+    cardConfig: {
+      type: CardType.WithoutGraph,
+      id: 5,
+      options: {
+        subtitle: 'Pulse el botón "Ver más"',
+        dashboardConfig: {
+          title: 'Cadenas por sector',
+          subtitle: 'Nro. operaciones'
+        },
+      }
+    },
+    query: null
+  },
+  {
+    type: FilterType.Product,
     name: 'Top 5 Cadenas',
     cardConfig: {
       type: CardType.Bar,
@@ -1167,6 +1245,22 @@ export const QUERY_SCHEMA: Query[] = [
   },
   {
     type: FilterType.Product,
+    name: 'Cadenas',
+    cardConfig: {
+      type: CardType.WithoutGraph,
+      id: 6,
+      options: {
+        subtitle: 'Pulse el botón "Ver más"',
+        dashboardConfig: {
+          title: 'Eslabones por cadena',
+          subtitle: 'Nro. operaciones'
+        },
+      }
+    },
+    query: null
+  },
+  {
+    type: FilterType.Product,
     name: 'Top 5 Eslabones',
     cardConfig: {
       type: CardType.Bar,
@@ -1211,6 +1305,22 @@ export const QUERY_SCHEMA: Query[] = [
       orderByFields: ['total_opif_sum DESC'],
       pageSize: 5
     }
+  },
+  {
+    type: FilterType.Product,
+    name: 'Eslabones',
+    cardConfig: {
+      type: CardType.WithoutGraph,
+      id: 7,
+      options: {
+        subtitle: 'Pulse el botón "Ver más"',
+        dashboardConfig: {
+          title: 'Destinos por cadena',
+          subtitle: 'Nro. operaciones'
+        },
+      }
+    },
+    query: null
   },
   {
     type: FilterType.Producer,

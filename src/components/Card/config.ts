@@ -187,6 +187,7 @@ export enum CardType {
     Bar = 'BAR',
     Multiserie = 'MULTISERIE',
     AmountRow = 'AMOUNT_ROW',
+    WithoutGraph = 'WITHOUT_GRAPH',
 }
 
 export enum FormatType {
